@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
+import ChatWithPost from '../components/ChatWithPost';
 
 export default function PostDetail() {
   const { slug } = useParams();
@@ -221,6 +222,7 @@ export default function PostDetail() {
           )}
         </div>
       </section>
+      {post && <ChatWithPost postId={post._id} />}
     </article>
   );
 }

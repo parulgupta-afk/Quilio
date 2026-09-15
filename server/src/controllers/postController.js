@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const { processPostEmbeddings } = require('../services/embeddingPipeline');
 
 // @desc    Create a new post
 // @route   POST /api/posts
@@ -19,6 +20,11 @@ const createPost = async (req, res) => {
       tags: tags || [],
       status: status || 'draft',
     });
+
+    // Generate embeddings in background if published
+    if (post.status === 'published') {
+      processPostEmbeddings(post._id, post.content);
+    }
 
     const populatedPost = await Post.findById(post._id).populate(
       'author',
@@ -75,7 +81,6 @@ const getPostBySlug = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Increment views
     post.viewsCount += 1;
     await post.save();
 
@@ -113,12 +118,14 @@ const updatePost = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Check ownership
     if (post.author.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
     const { title, content, coverImageUrl, tags, status } = req.body;
+
+    const wasPublished = post.status === 'published';
+    const contentChanged = content && content !== post.content;
 
     post.title = title || post.title;
     post.content = content || post.content;
@@ -128,6 +135,11 @@ const updatePost = async (req, res) => {
 
     const updatedPost = await post.save();
     await updatedPost.populate('author', 'name avatarUrl');
+
+    // Re-generate embeddings if published and content changed (or newly published)
+    if (updatedPost.status === 'published' && (contentChanged || !wasPublished)) {
+      processPostEmbeddings(updatedPost._id, updatedPost.content);
+    }
 
     res.status(200).json(updatedPost);
   } catch (error) {

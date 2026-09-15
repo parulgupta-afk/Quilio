@@ -7,7 +7,6 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-// Security & parsing middleware
 app.use(helmet());
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -18,15 +17,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Basic rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 200,
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api', limiter);
 
-// Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -35,20 +32,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/social', require('./routes/social'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/search', require('./routes/search'));
+app.use('/api/ai', require('./routes/ai'));
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.statusCode || 500).json({
