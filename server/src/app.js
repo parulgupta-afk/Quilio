@@ -35,8 +35,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API routes will be mounted here
-// app.use('/api/auth', require('./routes/auth'));
+// API routes
+app.use('/api/auth', require('./routes/auth'));
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/posts', require('./routes/posts'));
 
