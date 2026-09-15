@@ -21,7 +21,7 @@ app.use(morgan('dev'));
 // Basic rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP
+  max: 200,
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api', limiter);
@@ -40,6 +40,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/social', require('./routes/social'));
+app.use('/api/upload', require('./routes/upload'));
+app.use('/api/search', require('./routes/search'));
 
 // 404 handler
 app.use((req, res) => {

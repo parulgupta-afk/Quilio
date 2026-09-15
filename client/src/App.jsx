@@ -6,6 +6,8 @@ import HomeFeed from './pages/HomeFeed';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Search from './pages/Search';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -28,6 +30,9 @@ function App() {
             <Link to="/" className="hover:text-indigo-600">
               Home
             </Link>
+            <Link to="/search" className="hover:text-indigo-600">
+              Search
+            </Link>
 
             {isAuthenticated ? (
               <>
@@ -37,7 +42,12 @@ function App() {
                 <Link to="/dashboard" className="hover:text-indigo-600">
                   Dashboard
                 </Link>
-                <span className="text-gray-800">{user?.name}</span>
+                <Link
+                  to={`/profile/${user?._id}`}
+                  className="hover:text-indigo-600"
+                >
+                  {user?.name}
+                </Link>
                 <button
                   onClick={() => {
                     logout();
@@ -71,6 +81,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/post/:slug" element={<PostDetail />} />
+          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/search" element={<Search />} />
 
           <Route
             path="/write"

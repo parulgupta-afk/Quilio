@@ -7,9 +7,32 @@ export default function CreatePost() {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [status, setStatus] = useState('draft');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data } = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setCoverImageUrl(data.url);
+    } catch (err) {
+      setError('Image upload failed. Make sure Cloudinary is configured.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +50,7 @@ export default function CreatePost() {
         content,
         tags: tagArray,
         status,
+        coverImageUrl,
       });
 
       navigate(`/post/${data.slug}`);
@@ -64,6 +88,26 @@ export default function CreatePost() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
+            Cover Image
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="w-full text-sm"
+          />
+          {uploading && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+          {coverImageUrl && (
+            <img
+              src={coverImageUrl}
+              alt="Cover preview"
+              className="mt-3 max-h-48 rounded-lg object-cover"
+            />
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Content
           </label>
           <textarea
@@ -72,7 +116,7 @@ export default function CreatePost() {
             required
             rows={16}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm"
-            placeholder="Write your post here... (Markdown support coming later)"
+            placeholder="Write your post here..."
           />
         </div>
 
@@ -114,7 +158,7 @@ export default function CreatePost() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || uploading}
           className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60 transition"
         >
           {loading ? 'Saving...' : status === 'published' ? 'Publish Post' : 'Save Draft'}
