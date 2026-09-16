@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import ChatWithPost from '../components/ChatWithPost';
+import SimilarPosts from '../components/SimilarPosts';
 
 export default function PostDetail() {
   const { slug } = useParams();
@@ -229,6 +230,7 @@ export default function PostDetail() {
           )}
         </div>
       </section>
+      {post && <SimilarPosts postId={post._id} />}
       {post && <ChatWithPost postId={post._id} />}
     </article>
   );
