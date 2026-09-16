@@ -56,7 +56,7 @@ const getSimilarPosts = async (req, res) => {
 
     // Get all other published posts that have embeddings
     const allChunks = await EmbeddingChunk.aggregate([
-      { $match: { post: { $ne: require('mongoose').Types.ObjectId.createFromHexString(postId) } } },
+      { $match: { post: { $ne: new (require('mongoose').Types.ObjectId)(postId) } } },
       {
         $group: {
           _id: '$post',
