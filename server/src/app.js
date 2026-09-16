@@ -39,6 +39,7 @@ app.use('/api/social', require('./routes/social'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/learn', require('./routes/learn'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

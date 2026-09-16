@@ -165,3 +165,89 @@ module.exports = {
   chatWithPost,
   cosineSimilarity,
 };
+
+// ==================== LEARN THIS ====================
+
+/**
+ * Extract key concepts + generate a quiz from post content
+ */
+async function generateLearnContent(title, content) {
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 2048,
+        responseMimeType: 'application/json',
+      },
+    });
+
+    const prompt = `You are an expert educational content creator.
+
+Given the following technical article, generate a learning package.
+
+ARTICLE TITLE: ${title}
+
+ARTICLE CONTENT:
+${content.substring(0, 8000)}
+
+Return a JSON object with this exact structure:
+{
+  "summary": "A clear 2-3 sentence summary of the article",
+  "keyConcepts": ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"],
+  "questions": [
+    {
+      "question": "Question text?",
+      "type": "mcq",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "explanation": "Why this is correct"
+    },
+    {
+      "question": "True or False statement?",
+      "type": "true_false",
+      "options": ["True", "False"],
+      "correctAnswer": "True",
+      "explanation": "Explanation"
+    }
+  ]
+}
+
+Rules:
+- Generate exactly 5-8 key concepts
+- Generate exactly 6-8 questions (mix of MCQ and True/False)
+- Questions must be answerable from the article
+- correctAnswer must exactly match one of the options
+- Keep language clear and educational
+- Return ONLY valid JSON, no markdown`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    // Parse JSON (handle possible markdown wrapping)
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/```json?\n?/g, '').replace(/```$/g, '').trim();
+    }
+
+    const data = JSON.parse(cleaned);
+
+    // Basic validation
+    if (!data.keyConcepts || !data.questions || !Array.isArray(data.questions)) {
+      throw new Error('Invalid response structure from Gemini');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Learn content generation error:', error.message);
+    throw new Error('Failed to generate learning content');
+  }
+}
+
+module.exports = {
+  generateEmbedding,
+  chunkText,
+  chatWithPost,
+  cosineSimilarity,
+  generateLearnContent,
+};

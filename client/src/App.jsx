@@ -8,6 +8,7 @@ import PostDetail from './pages/PostDetail';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
+import LearnThis from './pages/LearnThis';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -83,6 +84,14 @@ function App() {
           <Route path="/post/:slug" element={<PostDetail />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/search" element={<Search />} />
+          <Route
+            path="/learn/:postId"
+            element={
+              <ProtectedRoute>
+                <LearnThis />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/write"
