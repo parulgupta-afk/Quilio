@@ -1,23 +1,85 @@
-# Quilio — UI/UX Prototype
+# Quilio
 
-Static HTML/CSS prototype of the Quilio brand and core screens. No build step required — open any .html file directly in a browser, or serve the folder with any static server.
+**A blog isn't just something you read — it's something you learn from, verify, remix, and grow from.**
 
-## Screens
-- `index.html` — Logo reveal / intro splash
-- `feed.html` — Home feed with rail navigation, tag tabs, and an ambient-glow "trending" card
-- `article.html` — Article reader with the "Chat with a blog" side panel (citations included)
-- `learn.html` — "Learn This" mode: key concepts + quiz
+AI-Powered Social Learning & Blogging Platform built with React, Node.js, MongoDB, and Google Gemini.
 
-## Design tokens
-All colors, fonts, radii, and the reusable `.ambient-glow` effect live in `style.css`.
+## Core Features
 
-- Background: `#0B0D12` / `#12141C` / `#15171F`
-- Accent gradient: `#6366F1` → `#A855F7`
-- Progress/gamification accent: `#F2A93B`
-- Display/body font: Newsreader (serif)
-- UI font: Inter
+### Social Blogging
+- Auth (JWT)
+- Write / publish posts with cover images (Cloudinary)
+- Home feed + Personalized "For You" feed
+- Profiles + Follow
+- Like, Comment, Bookmark
+- Search
 
-## Notes for backend integration
-- Feed cards, article content, and chat messages are static placeholders — swap in real data via your API
-- The `.ambient-glow` class is meant to be applied conditionally (e.g. only on trending posts or while the AI chat panel is open), not globally
-- Citation pills (`.cite`) are static; wire them to scroll/highlight the matching paragraph using your chunk metadata
+### AI Layer (Gemini)
+- **Chat with a Blog** — RAG with source citations
+- **Learn This** — auto key concepts + quiz generation
+- Embedding pipeline (chunk → embed → store)
+- Similar posts via cosine similarity
+- Rate limiting for cost control
+
+### Learning & Real-time
+- Quiz attempts + progress tracking
+- Notifications (follow, like, comment)
+- Socket.io ready for real-time delivery
+
+## Tech Stack
+
+| Layer | Choice |
+|-------|--------|
+| Frontend | React + Vite + Tailwind + Zustand |
+| Backend | Node.js + Express |
+| Database | MongoDB Atlas |
+| Auth | JWT |
+| Media | Cloudinary |
+| AI | Google Gemini (embeddings + generation) |
+| Real-time | Socket.io |
+
+## Getting Started
+
+```bash
+# Server
+cd server
+cp .env.example .env
+# Fill: MONGODB_URI, JWT_SECRET, GEMINI_API_KEY, CLOUDINARY_*
+npm install
+npm run dev
+
+# Client
+cd client
+npm install
+npm run dev
+```
+
+## Architecture Highlight
+
+One embedding pipeline powers multiple features:
+
+```
+Post published
+    → Chunking
+    → Gemini embeddings
+    → Stored in MongoDB
+         ├── RAG Chat
+         ├── Similar Posts
+         └── (future Knowledge Graph)
+```
+
+## Project Structure
+
+```
+Quilio/
+├── client/          # React frontend
+└── server/          # Express backend
+    └── src/
+        ├── models/
+        ├── controllers/
+        ├── routes/
+        ├── services/    # AI + embedding pipeline
+        └── middleware/
+```
+
+Built as a portfolio-grade full-stack + AI project.

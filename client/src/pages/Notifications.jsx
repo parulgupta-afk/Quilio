@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import Layout from '../components/Layout';
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
@@ -47,7 +48,7 @@ export default function Notifications() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-500">
+      <Layout><div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-500">
         Loading notifications...
       </div>
     );
@@ -110,6 +111,7 @@ export default function Notifications() {
           ))}
         </div>
       )}
-    </div>
+    </div></Layout>
+    </Layout>
   );
 }

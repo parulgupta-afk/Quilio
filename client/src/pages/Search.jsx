@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import Layout from '../components/Layout';
 
 export default function Search() {
   const [query, setQuery] = useState('');
@@ -25,7 +26,7 @@ export default function Search() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <Layout><div className="max-w-3xl mx-auto px-4 py-10">
       <h1 className="text-3xl font-bold mb-8">Search</h1>
 
       <form onSubmit={handleSearch} className="mb-10">
@@ -105,6 +106,7 @@ export default function Search() {
           </section>
         </div>
       )}
-    </div>
+    </div></Layout>
+    </Layout>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Layout from '../components/Layout';
 
 export default function LearnThis() {
   const { postId } = useParams();
@@ -76,7 +77,7 @@ export default function LearnThis() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-500">
+      <Layout><div className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-500">
         <p className="text-lg mb-2">🧠 Generating learning content...</p>
         <p className="text-sm">This may take a few seconds</p>
       </div>
@@ -282,6 +283,7 @@ export default function LearnThis() {
           Start Quiz →
         </button>
       </section>
-    </div>
+    </div></Layout>
+    </Layout>
   );
 }

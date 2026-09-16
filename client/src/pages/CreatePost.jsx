@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Layout from '../components/Layout';
 
 export default function CreatePost() {
   const [title, setTitle] = useState('');
@@ -62,7 +63,8 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <Layout>
+    <div className="max-w-3xl mx-auto px-6 py-10">
       <h1 className="text-3xl font-bold mb-8">Write a new post</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -165,5 +167,6 @@ export default function CreatePost() {
         </button>
       </form>
     </div>
+    </Layout>
   );
 }

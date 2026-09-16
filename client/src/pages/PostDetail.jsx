@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import ChatWithPost from '../components/ChatWithPost';
+import Layout from '../components/Layout';
 import SimilarPosts from '../components/SimilarPosts';
 
 export default function PostDetail() {
@@ -107,7 +108,7 @@ export default function PostDetail() {
   }
 
   return (
-    <article className="max-w-3xl mx-auto px-4 py-10">
+    <Layout><article className="max-w-3xl mx-auto px-6 py-10">
       <header className="mb-10">
         <div className="flex flex-wrap gap-2 mb-4">
           {post.tags?.map((tag) => (
@@ -232,6 +233,6 @@ export default function PostDetail() {
       </section>
       {post && <SimilarPosts postId={post._id} />}
       {post && <ChatWithPost postId={post._id} />}
-    </article>
+    </article></Layout>
   );
 }

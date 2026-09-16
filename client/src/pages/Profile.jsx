@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
+import Layout from '../components/Layout';
 import useAuthStore from '../store/authStore';
 
 export default function Profile() {
@@ -64,7 +65,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-500">
+      <Layout><div className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-500">
         Loading profile...
       </div>
     );
@@ -164,6 +165,7 @@ export default function Profile() {
           ))}
         </div>
       )}
-    </div>
+    </div></Layout>
+    </Layout>
   );
 }

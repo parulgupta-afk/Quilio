@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import Layout from '../components/Layout';
 
 export default function Progress() {
   const [attempts, setAttempts] = useState([]);
@@ -22,7 +23,7 @@ export default function Progress() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center text-gray-500">
+      <Layout><div className="max-w-3xl mx-auto px-4 py-16 text-center text-gray-500">
         Loading your progress...
       </div>
     );
@@ -95,6 +96,7 @@ export default function Progress() {
           ))}
         </div>
       )}
-    </div>
+    </div></Layout>
+    </Layout>
   );
 }
