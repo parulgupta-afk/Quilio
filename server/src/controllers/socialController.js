@@ -4,6 +4,7 @@ const Bookmark = require('../models/Bookmark');
 const Comment = require('../models/Comment');
 const User = require('../models/User');
 const Post = require('../models/Post');
+const createNotification = require('../utils/createNotification');
 
 // ==================== FOLLOW ====================
 
@@ -39,6 +40,15 @@ const followUser = async (req, res) => {
     // Update counts
     await User.findByIdAndUpdate(req.user._id, { $inc: { followingCount: 1 } });
     await User.findByIdAndUpdate(targetUserId, { $inc: { followersCount: 1 } });
+
+    const io = req.app.get('io');
+    await createNotification({
+      recipientId: targetUserId,
+      senderId: req.user._id,
+      type: 'follow',
+      message: `${req.user.name} started following you`,
+      io,
+    });
 
     res.status(200).json({ message: 'Followed successfully' });
   } catch (error) {
@@ -92,6 +102,16 @@ const likePost = async (req, res) => {
 
     await Like.create({ user: req.user._id, post: postId });
     await Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } });
+
+    const io = req.app.get('io');
+    await createNotification({
+      recipientId: post.author,
+      senderId: req.user._id,
+      type: 'like',
+      postId,
+      message: `${req.user.name} liked your post`,
+      io,
+    });
 
     res.status(200).json({ message: 'Post liked' });
   } catch (error) {
@@ -207,6 +227,16 @@ const addComment = async (req, res) => {
       'author',
       'name avatarUrl'
     );
+
+    const io = req.app.get('io');
+    await createNotification({
+      recipientId: post.author,
+      senderId: req.user._id,
+      type: 'comment',
+      postId,
+      message: `${req.user.name} commented on your post`,
+      io,
+    });
 
     res.status(201).json(populated);
   } catch (error) {
