@@ -12,7 +12,6 @@ export default function LearnThis() {
   const [summary, setSummary] = useState('');
   const [keyConcepts, setKeyConcepts] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [quizId, setQuizId] = useState(null);
 
   const [step, setStep] = useState('overview'); // overview | quiz | results
   const [currentQ, setCurrentQ] = useState(0);
@@ -27,34 +26,25 @@ export default function LearnThis() {
         setSummary(data.summary);
         setKeyConcepts(data.keyConcepts || []);
         setQuestions(data.questions || []);
-        setQuizId(data.quizId);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load learning content');
       } finally {
         setLoading(false);
       }
     };
-
     fetchLearn();
   }, [postId]);
 
   const handleSelect = (option) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [currentQ]: option,
-    }));
+    setSelectedAnswers((prev) => ({ ...prev, [currentQ]: option }));
   };
 
   const handleNext = () => {
-    if (currentQ < questions.length - 1) {
-      setCurrentQ((q) => q + 1);
-    }
+    if (currentQ < questions.length - 1) setCurrentQ((q) => q + 1);
   };
 
   const handlePrev = () => {
-    if (currentQ > 0) {
-      setCurrentQ((q) => q - 1);
-    }
+    if (currentQ > 0) setCurrentQ((q) => q - 1);
   };
 
   const handleSubmit = async () => {
@@ -64,7 +54,6 @@ export default function LearnThis() {
         questionIndex: index,
         selectedAnswer: selectedAnswers[index] || '',
       }));
-
       const { data } = await api.post(`/learn/${postId}/submit`, { answers });
       setResults(data);
       setStep('results');
@@ -75,215 +64,271 @@ export default function LearnThis() {
     }
   };
 
+  // ── Loading ──
   if (loading) {
     return (
-      <Layout><div className="max-w-3xl mx-auto px-4 py-20 text-center text-gray-500">
-        <p className="text-lg mb-2">🧠 Generating learning content...</p>
-        <p className="text-sm">This may take a few seconds</p>
-      </div>
+      <Layout>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '80px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: 18, marginBottom: 8 }}>🧠 Generating learning content…</p>
+          <p style={{ fontSize: 14, color: 'var(--text-faint)' }}>This may take a few seconds</p>
+        </div>
+      </Layout>
     );
   }
 
+  // ── Error ──
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <p className="text-red-600 mb-4">{error}</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-indigo-600 hover:underline"
-        >
-          ← Go back
-        </button>
-      </div>
+      <Layout>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
+          <p style={{ color: '#fca5a5', marginBottom: 16 }}>{error}</p>
+          <button onClick={() => navigate(-1)} style={{ color: '#C9C9FF', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
+            ← Go back
+          </button>
+        </div>
+      </Layout>
     );
   }
 
-  // ========== RESULTS ==========
+  // ── Results ──
   if (step === 'results' && results) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-10">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold mb-2">Quiz Results</h1>
-          <p className="text-5xl font-bold text-indigo-600 my-6">
-            {results.percentage}%
-          </p>
-          <p className="text-gray-600">
-            You got {results.score} out of {results.totalQuestions} correct
-          </p>
-        </div>
-
-        <div className="space-y-6 mb-10">
-          {results.detailedAnswers?.map((ans, i) => (
-            <div
-              key={i}
-              className={`p-5 rounded-xl border ${
-                ans.isCorrect
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-red-50 border-red-200'
-              }`}
+      <Layout>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px 100px' }}>
+          {/* Score */}
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-faint)', marginBottom: 8 }}>🧠 Learn This · Results</div>
+            <h1 className="serif" style={{ fontWeight: 500, fontSize: 30, margin: '0 0 8px' }}>Quiz complete</h1>
+            <p
+              style={{
+                fontSize: 56, fontWeight: 700, margin: '20px 0 8px',
+                background: 'linear-gradient(135deg,var(--accent-1),var(--accent-2))',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}
             >
-              <p className="font-medium mb-2">
-                {i + 1}. {questions[i]?.question}
-              </p>
-              <p className="text-sm">
-                Your answer:{' '}
-                <span className="font-medium">{ans.selectedAnswer || '—'}</span>
-              </p>
-              {!ans.isCorrect && (
-                <p className="text-sm mt-1">
-                  Correct answer:{' '}
-                  <span className="font-medium text-green-700">
-                    {ans.correctAnswer}
-                  </span>
-                </p>
-              )}
-              {ans.explanation && (
-                <p className="text-sm text-gray-600 mt-2">{ans.explanation}</p>
-              )}
-            </div>
-          ))}
-        </div>
+              {results.percentage}%
+            </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+              {results.score} of {results.totalQuestions} correct
+            </p>
+          </div>
 
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={() => {
-              setStep('overview');
-              setCurrentQ(0);
-              setSelectedAnswers({});
-              setResults(null);
-            }}
-            className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-          >
-            Review Concepts
-          </button>
-          <Link
-            to="/"
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-          >
-            Back to Feed
-          </Link>
+          {/* Detailed answers */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 40 }}>
+            {results.detailedAnswers?.map((ans, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: 20, borderRadius: 12,
+                  background: ans.isCorrect ? 'rgba(74,222,128,0.06)' : 'rgba(239,68,68,0.06)',
+                  border: `1px solid ${ans.isCorrect ? 'rgba(74,222,128,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                }}
+              >
+                <p style={{ fontWeight: 500, marginBottom: 8, color: 'var(--text)', fontSize: 15 }}>
+                  {i + 1}. {questions[i]?.question}
+                </p>
+                <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '0 0 4px' }}>
+                  Your answer: <span style={{ fontWeight: 500, color: ans.isCorrect ? '#4ADE80' : '#fca5a5' }}>{ans.selectedAnswer || '—'}</span>
+                </p>
+                {!ans.isCorrect && (
+                  <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '0 0 4px' }}>
+                    Correct: <span style={{ fontWeight: 500, color: '#4ADE80' }}>{ans.correctAnswer}</span>
+                  </p>
+                )}
+                {ans.explanation && (
+                  <p style={{ fontSize: 13, color: 'var(--text-faint)', margin: '6px 0 0' }}>{ans.explanation}</p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <button
+              onClick={() => { setStep('overview'); setCurrentQ(0); setSelectedAnswers({}); setResults(null); }}
+              className="btn btn-ghost"
+            >
+              Review Concepts
+            </button>
+            <Link to="/" className="btn btn-primary">Back to Feed</Link>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
-  // ========== QUIZ ==========
+  // ── Quiz ──
   if (step === 'quiz') {
     const q = questions[currentQ];
     const progress = ((currentQ + 1) / questions.length) * 100;
+    const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
     return (
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-500 mb-2">
-            <span>
+      <Layout>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px 100px' }}>
+          {/* Progress */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-faint)', marginBottom: 8 }}>
+              <span>Question {currentQ + 1} of {questions.length}</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div style={{ height: 6, borderRadius: 100, background: 'var(--bg-card)', overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: '100%', width: `${progress}%`,
+                  background: 'linear-gradient(90deg,var(--accent-1),var(--accent-2))',
+                  borderRadius: 100, transition: 'width 0.3s ease',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Question */}
+          <div className="card" style={{ padding: 26, marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-faint)', marginBottom: 10 }}>
               Question {currentQ + 1} of {questions.length}
-            </span>
-            <span>{Math.round(progress)}%</span>
+            </div>
+            <p className="serif" style={{ fontSize: 20, lineHeight: 1.4, margin: '0 0 22px', color: 'var(--text)' }}>
+              {q.question}
+            </p>
+
+            {q.options?.map((option, oi) => {
+              const isSelected = selectedAnswers[currentQ] === option;
+              return (
+                <div
+                  key={option}
+                  onClick={() => handleSelect(option)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '13px 16px',
+                    border: `1px solid ${isSelected ? 'var(--accent-1)' : 'var(--border-strong)'}`,
+                    borderRadius: 10, marginBottom: 10,
+                    background: isSelected ? 'rgba(99,102,241,0.1)' : 'transparent',
+                    cursor: 'pointer', fontSize: 14.5, color: isSelected ? '#C9C9FF' : 'var(--text-muted)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                      border: `1px solid ${isSelected ? 'var(--accent-1)' : 'var(--text-faint)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, color: isSelected ? '#C9C9FF' : 'var(--text-faint)',
+                    }}
+                  >
+                    {LETTERS[oi]}
+                  </span>
+                  {option}
+                </div>
+              );
+            })}
+
+            {/* Nav */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22 }}>
+              <button
+                onClick={handlePrev}
+                disabled={currentQ === 0}
+                className="btn btn-ghost"
+                style={{ padding: '9px 18px', fontSize: 13.5, opacity: currentQ === 0 ? 0.4 : 1 }}
+              >
+                Previous
+              </button>
+              {currentQ === questions.length - 1 ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || Object.keys(selectedAnswers).length < questions.length}
+                  className="btn btn-primary"
+                  style={{ padding: '9px 18px', fontSize: 13.5 }}
+                >
+                  {submitting ? 'Submitting…' : 'Submit Quiz'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="btn btn-primary"
+                  style={{ padding: '9px 18px', fontSize: 13.5 }}
+                >
+                  Next
+                </button>
+              )}
+            </div>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-600 transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
         </div>
-
-        <h2 className="text-xl font-semibold mb-6">{q.question}</h2>
-
-        <div className="space-y-3 mb-10">
-          {q.options?.map((option) => (
-            <button
-              key={option}
-              onClick={() => handleSelect(option)}
-              className={`w-full text-left px-5 py-3.5 rounded-xl border transition ${
-                selectedAnswers[currentQ] === option
-                  ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex justify-between">
-          <button
-            onClick={handlePrev}
-            disabled={currentQ === 0}
-            className="px-5 py-2.5 border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
-          >
-            Previous
-          </button>
-
-          {currentQ === questions.length - 1 ? (
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || Object.keys(selectedAnswers).length < questions.length}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition"
-            >
-              {submitting ? 'Submitting...' : 'Submit Quiz'}
-            </button>
-          ) : (
-            <button
-              onClick={handleNext}
-              className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-            >
-              Next
-            </button>
-          )}
-        </div>
-      </div>
+      </Layout>
     );
   }
 
-  // ========== OVERVIEW ==========
+  // ── Overview ──
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">🧠 Learn This</h1>
-        <p className="text-gray-600">
-          Key concepts and a quiz generated from this article
-        </p>
-      </div>
+    <Layout>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 24px 100px' }}>
 
-      {summary && (
-        <section className="mb-10 p-6 bg-indigo-50 rounded-2xl">
-          <h2 className="font-semibold text-indigo-900 mb-2">Summary</h2>
-          <p className="text-indigo-800 leading-relaxed">{summary}</p>
-        </section>
-      )}
-
-      <section className="mb-10">
-        <h2 className="text-xl font-bold mb-4">Key Concepts</h2>
-        <div className="flex flex-wrap gap-3">
-          {keyConcepts.map((concept, i) => (
-            <span
-              key={i}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-800"
-            >
-              {concept}
-            </span>
-          ))}
+        {/* Header */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: '#C9C9FF', fontWeight: 600 }}>🧠 Learn This</span>
+          </div>
+          <h1 className="serif" style={{ fontWeight: 500, fontSize: 30, margin: '0 0 6px' }}>
+            Key Concepts &amp; Quiz
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14.5, margin: '0 0 32px' }}>
+            {keyConcepts.length} key concepts · {questions.length} questions
+          </p>
         </div>
-      </section>
 
-      <section className="mb-10">
-        <h2 className="text-xl font-bold mb-2">
-          Quiz ({questions.length} questions)
-        </h2>
-        <p className="text-gray-600 mb-6">
-          Test your understanding of the article
-        </p>
+        {/* Progress bar placeholder */}
+        <div style={{ height: 6, borderRadius: 100, background: 'var(--bg-card)', marginBottom: 36, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: '0%', background: 'linear-gradient(90deg,var(--accent-1),var(--accent-2))', borderRadius: 100 }} />
+        </div>
 
-        <button
-          onClick={() => setStep('quiz')}
-          className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition"
-        >
-          Start Quiz →
-        </button>
-      </section>
-    </div></Layout>
+        {/* Summary */}
+        {summary && (
+          <section
+            style={{
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: 14, padding: '20px 22px', marginBottom: 32,
+            }}
+          >
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: '#C9C9FF', margin: '0 0 8px' }}>Summary</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14.5, lineHeight: 1.65, margin: 0 }}>{summary}</p>
+          </section>
+        )}
+
+        {/* Key Concepts grid */}
+        <section style={{ marginBottom: 40 }}>
+          <h2 className="serif" style={{ fontWeight: 500, fontSize: 22, margin: '0 0 14px' }}>Key Concepts</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {keyConcepts.map((concept, i) => (
+              <div
+                key={i}
+                style={{
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '14px 16px', fontSize: 14,
+                }}
+              >
+                <b style={{ display: 'block', fontSize: 14.5, marginBottom: 3, color: 'var(--text)' }}>{concept}</b>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Start quiz */}
+        <section>
+          <h2 className="serif" style={{ fontWeight: 500, fontSize: 22, margin: '0 0 6px' }}>
+            Quiz ({questions.length} questions)
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14.5, marginBottom: 22 }}>
+            Test your understanding of the article
+          </p>
+          <button
+            onClick={() => setStep('quiz')}
+            className="btn btn-primary"
+            style={{ padding: '11px 28px' }}
+          >
+            Start Quiz →
+          </button>
+        </section>
+      </div>
     </Layout>
   );
 }

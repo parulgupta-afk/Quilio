@@ -20,8 +20,6 @@ export default function Profile() {
       try {
         const { data } = await api.get(`/users/${id}`);
         setProfile(data);
-
-        // Fetch published posts by this user (simple approach)
         const postsRes = await api.get('/posts');
         const userPosts = (postsRes.data.posts || []).filter(
           (p) => p.author?._id === id
@@ -33,7 +31,6 @@ export default function Profile() {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [id]);
 
@@ -44,17 +41,11 @@ export default function Profile() {
       if (isFollowing) {
         await api.delete(`/social/follow/${id}`);
         setIsFollowing(false);
-        setProfile((p) => ({
-          ...p,
-          followersCount: Math.max(0, p.followersCount - 1),
-        }));
+        setProfile((p) => ({ ...p, followersCount: Math.max(0, p.followersCount - 1) }));
       } else {
         await api.post(`/social/follow/${id}`);
         setIsFollowing(true);
-        setProfile((p) => ({
-          ...p,
-          followersCount: p.followersCount + 1,
-        }));
+        setProfile((p) => ({ ...p, followersCount: p.followersCount + 1 }));
       }
     } catch (err) {
       console.error(err);
@@ -65,107 +56,112 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <Layout><div className="max-w-4xl mx-auto px-4 py-20 text-center text-gray-500">
-        Loading profile...
-      </div>
+      <Layout>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '64px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Loading profile…
+        </div>
+      </Layout>
     );
   }
 
   if (!profile) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <p className="text-red-600">User not found</p>
-      </div>
+      <Layout>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '64px 24px', textAlign: 'center' }}>
+          <p style={{ color: '#fca5a5' }}>User not found</p>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      {/* Profile Header */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-10">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-700">
-            {profile.avatarUrl ? (
-              <img
-                src={profile.avatarUrl}
-                alt={profile.name}
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              profile.name?.charAt(0)
-            )}
-          </div>
+    <Layout>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 24px 100px' }}>
 
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">{profile.name}</h1>
-            {profile.bio && (
-              <p className="text-gray-600 mt-2 max-w-xl">{profile.bio}</p>
-            )}
-
-            <div className="flex gap-6 mt-4 text-sm text-gray-600">
-              <span>
-                <strong className="text-gray-900">{profile.followersCount}</strong>{' '}
-                Followers
-              </span>
-              <span>
-                <strong className="text-gray-900">{profile.followingCount}</strong>{' '}
-                Following
-              </span>
-              <span>
-                Joined{' '}
-                {new Date(profile.createdAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </span>
+        {/* Profile header card */}
+        <div
+          className="card ambient-glow"
+          style={{ padding: '32px', marginBottom: 40 }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+            {/* Avatar */}
+            <div
+              style={{
+                width: 88, height: 88, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg,var(--accent-1),var(--accent-2))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 32, fontWeight: 700, color: '#fff', overflow: 'hidden',
+              }}
+            >
+              {profile.avatarUrl ? (
+                <img src={profile.avatarUrl} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                profile.name?.charAt(0)
+              )}
             </div>
+
+            {/* Info */}
+            <div style={{ flex: 1 }}>
+              <h1 className="serif" style={{ fontWeight: 500, fontSize: 28, margin: '0 0 6px', color: 'var(--text)' }}>
+                {profile.name}
+              </h1>
+              {profile.bio && (
+                <p style={{ color: 'var(--text-muted)', margin: '0 0 14px', fontSize: 14.5, maxWidth: 500 }}>
+                  {profile.bio}
+                </p>
+              )}
+              <div style={{ display: 'flex', gap: 24, fontSize: 13.5, color: 'var(--text-faint)' }}>
+                <span>
+                  <strong style={{ color: 'var(--text)' }}>{profile.followersCount}</strong>{' '}Followers
+                </span>
+                <span>
+                  <strong style={{ color: 'var(--text)' }}>{profile.followingCount}</strong>{' '}Following
+                </span>
+                <span>
+                  Joined {new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+            </div>
+
+            {/* Follow button */}
+            {!isOwnProfile && isAuthenticated && (
+              <button
+                onClick={handleFollow}
+                disabled={followLoading}
+                className={`btn ${isFollowing ? 'btn-ghost' : 'btn-primary'}`}
+                style={{ padding: '9px 20px', fontSize: 13.5 }}
+              >
+                {followLoading ? '…' : isFollowing ? 'Following' : 'Follow'}
+              </button>
+            )}
           </div>
-
-          {!isOwnProfile && isAuthenticated && (
-            <button
-              onClick={handleFollow}
-              disabled={followLoading}
-              className={`px-6 py-2.5 rounded-lg font-medium transition ${
-                isFollowing
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              }`}
-            >
-              {followLoading
-                ? '...'
-                : isFollowing
-                ? 'Following'
-                : 'Follow'}
-            </button>
-          )}
         </div>
+
+        {/* Posts */}
+        <h2 className="serif" style={{ fontWeight: 500, fontSize: 22, margin: '0 0 20px' }}>Posts</h2>
+
+        {posts.length === 0 ? (
+          <p style={{ color: 'var(--text-faint)', fontSize: 14 }}>No published posts yet.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {posts.map((post) => (
+              <Link
+                key={post._id}
+                to={`/post/${post.slug}`}
+                className="card"
+                style={{ display: 'block', padding: '18px 22px' }}
+              >
+                <h3 style={{ fontWeight: 500, fontSize: 17, color: 'var(--text)', margin: '0 0 6px' }}>
+                  {post.title}
+                </h3>
+                <p style={{ fontSize: 13, color: 'var(--text-faint)', margin: 0 }}>
+                  {new Date(post.createdAt).toLocaleDateString()} · {post.likesCount} likes · {post.commentsCount} comments
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* Posts */}
-      <h2 className="text-xl font-bold mb-6">Posts</h2>
-
-      {posts.length === 0 ? (
-        <p className="text-gray-500">No published posts yet.</p>
-      ) : (
-        <div className="space-y-5">
-          {posts.map((post) => (
-            <Link
-              key={post._id}
-              to={`/post/${post.slug}`}
-              className="block bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition"
-            >
-              <h3 className="text-lg font-semibold text-gray-900 hover:text-indigo-600">
-                {post.title}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {new Date(post.createdAt).toLocaleDateString()} ·{' '}
-                {post.likesCount} likes · {post.commentsCount} comments
-              </p>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div></Layout>
     </Layout>
   );
 }

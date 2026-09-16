@@ -18,80 +18,79 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
-
     fetchMyPosts();
   }, []);
 
   if (loading) {
     return (
-      <Layout><div className="max-w-5xl mx-auto px-4 py-16 text-center text-gray-500">
-        Loading your posts...
-      </div>
+      <Layout>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '64px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Loading your posts…
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Your Dashboard</h1>
-        <Link
-          to="/write"
-          className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition"
-        >
-          + New Post
-        </Link>
-      </div>
-
-      {posts.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-600 mb-4">You haven’t written any posts yet.</p>
-          <Link to="/write" className="text-indigo-600 font-medium hover:underline">
-            Write your first post →
+    <Layout>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 24px 100px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+          <h1 className="serif" style={{ fontWeight: 500, fontSize: 30, margin: 0 }}>Your Dashboard</h1>
+          <Link to="/write" className="btn btn-primary" style={{ padding: '9px 18px', fontSize: 13.5 }}>
+            + New Post
           </Link>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <div
-              key={post._id}
-              className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between hover:shadow-sm transition"
-            >
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="font-semibold text-lg text-gray-900">
-                    {post.title}
-                  </h2>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      post.status === 'published'
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-yellow-50 text-yellow-700'
-                    }`}
-                  >
-                    {post.status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Updated {new Date(post.updatedAt).toLocaleDateString()} ·{' '}
-                  {post.viewsCount} views
-                </p>
-              </div>
 
-              <div className="flex gap-3">
-                {post.status === 'published' && (
-                  <Link
-                    to={`/post/${post.slug}`}
-                    className="text-sm text-indigo-600 hover:underline"
-                  >
-                    View
-                  </Link>
-                )}
+        {posts.length === 0 ? (
+          <div
+            style={{
+              textAlign: 'center', padding: '64px 24px',
+              background: 'var(--bg-card)', border: '1px solid var(--border)',
+              borderRadius: 16,
+            }}
+          >
+            <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>You haven't written any posts yet.</p>
+            <Link to="/write" style={{ color: '#C9C9FF', fontWeight: 500 }}>Write your first post →</Link>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {posts.map((post) => (
+              <div
+                key={post._id}
+                className="card"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px' }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                    <h2 style={{ fontWeight: 500, fontSize: 16, color: 'var(--text)', margin: 0 }}>{post.title}</h2>
+                    <span
+                      style={{
+                        fontSize: 11, padding: '2px 8px', borderRadius: 100,
+                        background: post.status === 'published' ? 'rgba(74,222,128,0.1)' : 'rgba(242,169,59,0.1)',
+                        color: post.status === 'published' ? '#4ADE80' : 'var(--amber)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {post.status}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--text-faint)', margin: 0 }}>
+                    Updated {new Date(post.updatedAt).toLocaleDateString()} · {post.viewsCount} views
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {post.status === 'published' && (
+                    <Link to={`/post/${post.slug}`} style={{ color: '#C9C9FF', fontSize: 13.5 }}>
+                      View →
+                    </Link>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div></Layout>
+            ))}
+          </div>
+        )}
+      </div>
     </Layout>
   );
 }
