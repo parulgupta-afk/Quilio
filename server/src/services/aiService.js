@@ -160,13 +160,6 @@ function cosineSimilarity(vecA, vecB) {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-module.exports = {
-  generateEmbedding,
-  chunkText,
-  chatWithPost,
-  cosineSimilarity,
-};
-
 // ==================== LEARN THIS ====================
 
 /**
@@ -257,10 +250,79 @@ Rules:
   }
 }
 
+
+// ==================== WRITE WITH AI ====================
+
+/**
+ * Conversational writing assistant.
+ * modes: brainstorm | expand | complete | review | rewrite | outline
+ */
+async function writeWithAI({ mode, title, draft, userMessage, history = [] }) {
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        temperature: 0.65,
+        maxOutputTokens: 4096,
+      },
+    });
+
+    const modeInstructions = {
+      brainstorm:
+        'Help the author brainstorm and shape their ideas into a clear article direction. Ask clarifying questions if needed, then propose angles, structure, and key points.',
+      expand:
+        'Expand the author\'s rough ideas into fuller paragraphs while keeping their voice and intent. Do not invent facts they did not imply.',
+      complete:
+        'Complete or continue the draft naturally from where it left off. Match tone and technical level. Return usable draft text the author can paste.',
+      review:
+        'Review the draft critically: clarity, structure, accuracy risks, missing sections, and readability. Be specific and actionable. Do not rewrite the whole piece unless asked.',
+      rewrite:
+        'Rewrite the draft to improve clarity and flow while preserving meaning. Return the improved full draft text.',
+      outline:
+        'Produce a clear outline (H2/H3 style) from the author\'s ideas, suitable for a technical blog post.',
+    };
+
+    const instruction = modeInstructions[mode] || modeInstructions.expand;
+
+    const historyText = (history || [])
+      .slice(-10)
+      .map((m) => `${m.role === 'user' ? 'Author' : 'Assistant'}: ${m.content}`)
+      .join('\n');
+
+    const prompt = `You are Quilio Write — an AI writing partner for technical bloggers.
+
+Mode: ${mode}
+Your job: ${instruction}
+
+Rules:
+- Stay helpful and concrete.
+- Prefer the author's ideas over inventing new claims.
+- When producing draft text, mark it clearly so the author can apply it.
+- For review mode, use short bullet points.
+- Keep responses focused (not overly long unless completing a full draft).
+
+Current title (may be empty): ${title || '(none yet)'}
+
+Current draft (may be empty):
+${(draft || '(empty)').substring(0, 12000)}
+
+${historyText ? `Conversation so far:\n${historyText}\n` : ''}
+Author: ${userMessage}
+Assistant:`;
+
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (error) {
+    console.error('Write with AI error:', error.message);
+    throw new Error('Failed to generate writing assistance');
+  }
+}
+
 module.exports = {
   generateEmbedding,
   chunkText,
   chatWithPost,
   cosineSimilarity,
   generateLearnContent,
+  writeWithAI,
 };
