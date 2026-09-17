@@ -283,23 +283,6 @@ export default function HomeFeed() {
             </article>
             );
           })}
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: 18, color: '#5A6076', fontSize: 13 }}>
-                  <span>❤ {post.likesCount || 0}</span>
-                  <span>💬 {post.commentsCount || 0}</span>
-                </div>
-                <Link
-                  to={`/post/${post.slug}`}
-                  className="ai-pill"
-                  style={{ color: '#C9C9FF', background: 'rgba(99,102,241,0.15)' }}
-                >
-                  Ask AI →
-                </Link>
-              </div>
-            </article>
-          ))}
       </div>
     </Layout>
   );
