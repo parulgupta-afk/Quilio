@@ -233,54 +233,54 @@ export default function HomeFeed() {
               .trim()
               .substring(0, 160);
             return (
-            <article
-              key={post._id}
-              className={`card ${i === 0 ? 'ambient-glow' : ''}`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(href)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <div className="avatar">{post.author?.name?.charAt(0) || 'U'}</div>
-                <span className="muted" style={{ fontSize: 13.5 }}>
-                  <b
-                    style={{ color: '#F1F1F4', fontWeight: 500 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (post.author?._id) navigate(`/profile/${post.author._id}`);
-                    }}
-                  >
-                    {post.author?.name || 'Unknown'}
-                  </b>
-                  {' · '}
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </span>
-                {i === 0 && (
-                  <span className="ai-pill" style={{ marginLeft: 'auto' }}>
-                    ✦ Featured
+              <article
+                key={post._id}
+                className={`card ${i === 0 ? 'ambient-glow' : ''}`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate(href)}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div className="avatar">{post.author?.name?.charAt(0) || 'U'}</div>
+                  <span className="muted" style={{ fontSize: 13.5 }}>
+                    <b
+                      style={{ color: '#F1F1F4', fontWeight: 500 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (post.author?._id) navigate(`/profile/${post.author._id}`);
+                      }}
+                    >
+                      {post.author?.name || 'Unknown'}
+                    </b>
+                    {' · '}
+                    {new Date(post.createdAt).toLocaleDateString()}
                   </span>
-                )}
-              </div>
-              <h3 style={{ marginBottom: 8 }}>{post.title}</h3>
-              <p className="ex">{excerpt}{excerpt.length >= 160 ? '…' : ''}</p>
-              {post.tags?.length > 0 && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                  {post.tags.slice(0, 4).map((tag) => (
-                    <span key={tag} className="chip">
-                      {tag}
+                  {i === 0 && (
+                    <span className="ai-pill" style={{ marginLeft: 'auto' }}>
+                      ✦ Featured
                     </span>
-                  ))}
+                  )}
                 </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: 18, color: '#5A6076', fontSize: 13 }}>
-                  <span>❤ {post.likesCount || 0}</span>
-                  <span>💬 {post.commentsCount || 0}</span>
+                <h3 style={{ marginBottom: 8 }}>{post.title}</h3>
+                <p className="ex">{excerpt}{excerpt.length >= 160 ? '…' : ''}</p>
+                {post.tags?.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                    {post.tags.slice(0, 4).map((tag) => (
+                      <span key={tag} className="chip">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 18, color: '#5A6076', fontSize: 13 }}>
+                    <span>❤ {post.likesCount || 0}</span>
+                    <span>💬 {post.commentsCount || 0}</span>
+                  </div>
+                  <span className="ai-pill" style={{ color: '#C9C9FF', background: 'rgba(99,102,241,0.15)' }}>
+                    Read · Ask AI →
+                  </span>
                 </div>
-                <span className="ai-pill" style={{ color: '#C9C9FF', background: 'rgba(99,102,241,0.15)' }}>
-                  Read · Ask AI →
-                </span>
-              </div>
-            </article>
+              </article>
             );
           })}
       </div>
