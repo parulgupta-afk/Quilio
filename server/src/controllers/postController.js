@@ -1,9 +1,21 @@
 const Post = require('../models/Post');
 const { processPostEmbeddings } = require('../services/embeddingPipeline');
 
+function makeSlug(title) {
+  return (
+    String(title || 'post')
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim() +
+    '-' +
+    Date.now().toString(36)
+  );
+}
+
 // @desc    Create a new post
 // @route   POST /api/posts
-// @access  Private
 const createPost = async (req, res) => {
   try {
     const { title, content, coverImageUrl, tags, status } = req.body;
@@ -21,7 +33,6 @@ const createPost = async (req, res) => {
       status: status || 'draft',
     });
 
-    // Generate embeddings in background if published
     if (post.status === 'published') {
       processPostEmbeddings(post._id, post.content);
     }
@@ -40,11 +51,10 @@ const createPost = async (req, res) => {
 
 // @desc    Get all published posts (feed)
 // @route   GET /api/posts
-// @access  Public
 const getPosts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const posts = await Post.find({ status: 'published' })
@@ -58,7 +68,7 @@ const getPosts = async (req, res) => {
     res.status(200).json({
       posts,
       page,
-      pages: Math.ceil(total / limit),
+      pages: Math.ceil(total / limit) || 1,
       total,
     });
   } catch (error) {
@@ -67,21 +77,30 @@ const getPosts = async (req, res) => {
   }
 };
 
-// @desc    Get single post by slug
+// @desc    Get single post by slug (or id fallback)
 // @route   GET /api/posts/:slug
-// @access  Public
 const getPostBySlug = async (req, res) => {
   try {
-    const post = await Post.findOne({ slug: req.params.slug }).populate(
+    const raw = decodeURIComponent(req.params.slug || '').trim();
+
+    let post = await Post.findOne({ slug: raw }).populate(
       'author',
       'name avatarUrl bio'
     );
+
+    if (!post && /^[a-f0-9]{24}$/i.test(raw)) {
+      post = await Post.findById(raw).populate('author', 'name avatarUrl bio');
+    }
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    post.viewsCount += 1;
+    if (!post.slug) {
+      post.slug = makeSlug(post.title);
+    }
+
+    post.viewsCount = (post.viewsCount || 0) + 1;
     await post.save();
 
     res.status(200).json(post);
@@ -93,7 +112,6 @@ const getPostBySlug = async (req, res) => {
 
 // @desc    Get my posts (published + drafts)
 // @route   GET /api/posts/me/all
-// @access  Private
 const getMyPosts = async (req, res) => {
   try {
     const posts = await Post.find({ author: req.user._id })
@@ -107,9 +125,26 @@ const getMyPosts = async (req, res) => {
   }
 };
 
+// @desc    Get published posts by author
+// @route   GET /api/posts/author/:userId
+const getPostsByAuthor = async (req, res) => {
+  try {
+    const posts = await Post.find({
+      author: req.params.userId,
+      status: 'published',
+    })
+      .populate('author', 'name avatarUrl')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ posts });
+  } catch (error) {
+    console.error('Get posts by author error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // @desc    Update a post
 // @route   PUT /api/posts/:id
-// @access  Private
 const updatePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -123,20 +158,19 @@ const updatePost = async (req, res) => {
     }
 
     const { title, content, coverImageUrl, tags, status } = req.body;
-
     const wasPublished = post.status === 'published';
     const contentChanged = content && content !== post.content;
 
     post.title = title || post.title;
     post.content = content || post.content;
-    post.coverImageUrl = coverImageUrl !== undefined ? coverImageUrl : post.coverImageUrl;
+    post.coverImageUrl =
+      coverImageUrl !== undefined ? coverImageUrl : post.coverImageUrl;
     post.tags = tags || post.tags;
     post.status = status || post.status;
 
     const updatedPost = await post.save();
     await updatedPost.populate('author', 'name avatarUrl');
 
-    // Re-generate embeddings if published and content changed (or newly published)
     if (updatedPost.status === 'published' && (contentChanged || !wasPublished)) {
       processPostEmbeddings(updatedPost._id, updatedPost.content);
     }
@@ -150,7 +184,6 @@ const updatePost = async (req, res) => {
 
 // @desc    Delete a post
 // @route   DELETE /api/posts/:id
-// @access  Private
 const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -176,6 +209,7 @@ module.exports = {
   getPosts,
   getPostBySlug,
   getMyPosts,
+  getPostsByAuthor,
   updatePost,
   deletePost,
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import Layout from '../components/Layout';
@@ -165,6 +165,7 @@ function EmptyDiscover({ isAuthenticated }) {
 
 export default function HomeFeed() {
   const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedType, setFeedType] = useState('latest');
@@ -224,12 +225,32 @@ export default function HomeFeed() {
         {!loading && posts.length === 0 && <EmptyDiscover isAuthenticated={isAuthenticated} />}
 
         {!loading &&
-          posts.map((post, i) => (
-            <article key={post._id} className={`card ${i === 0 ? 'ambient-glow' : ''}`}>
+          posts.map((post, i) => {
+            const href = post.slug ? `/post/${post.slug}` : `/post/${post._id}`;
+            const excerpt = (post.excerpt || post.content || '')
+              .replace(/#{1,6}\s*/g, '')
+              .replace(/\n+/g, ' ')
+              .trim()
+              .substring(0, 160);
+            return (
+            <article
+              key={post._id}
+              className={`card ${i === 0 ? 'ambient-glow' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate(href)}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div className="avatar">{post.author?.name?.charAt(0) || 'U'}</div>
                 <span className="muted" style={{ fontSize: 13.5 }}>
-                  <b style={{ color: '#F1F1F4', fontWeight: 500 }}>{post.author?.name || 'Unknown'}</b>
+                  <b
+                    style={{ color: '#F1F1F4', fontWeight: 500 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (post.author?._id) navigate(`/profile/${post.author._id}`);
+                    }}
+                  >
+                    {post.author?.name || 'Unknown'}
+                  </b>
                   {' · '}
                   {new Date(post.createdAt).toLocaleDateString()}
                 </span>
@@ -239,10 +260,8 @@ export default function HomeFeed() {
                   </span>
                 )}
               </div>
-              <Link to={`/post/${post.slug}`}>
-                <h3>{post.title}</h3>
-              </Link>
-              <p className="ex">{post.excerpt || (post.content || '').substring(0, 160)}</p>
+              <h3 style={{ marginBottom: 8 }}>{post.title}</h3>
+              <p className="ex">{excerpt}{excerpt.length >= 160 ? '…' : ''}</p>
               {post.tags?.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                   {post.tags.slice(0, 4).map((tag) => (
@@ -250,6 +269,20 @@ export default function HomeFeed() {
                       {tag}
                     </span>
                   ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 18, color: '#5A6076', fontSize: 13 }}>
+                  <span>❤ {post.likesCount || 0}</span>
+                  <span>💬 {post.commentsCount || 0}</span>
+                </div>
+                <span className="ai-pill" style={{ color: '#C9C9FF', background: 'rgba(99,102,241,0.15)' }}>
+                  Read · Ask AI →
+                </span>
+              </div>
+            </article>
+            );
+          })}
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
