@@ -15,21 +15,18 @@ export default function CreatePost() {
   const navigate = useNavigate();
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('image', file);
-
       const { data } = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       setCoverImageUrl(data.url);
-    } catch (err) {
-      setError('Image upload failed. Make sure Cloudinary is configured.');
+    } catch {
+      setError('Image upload failed (Cloudinary may not be configured)');
     } finally {
       setUploading(false);
     }
@@ -39,21 +36,11 @@ export default function CreatePost() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
-      const tagArray = tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-
+      const tagArray = tags.split(',').map((t) => t.trim()).filter(Boolean);
       const { data } = await api.post('/posts', {
-        title,
-        content,
-        tags: tagArray,
-        status,
-        coverImageUrl,
+        title, content, tags: tagArray, status, coverImageUrl,
       });
-
       navigate(`/post/${data.slug}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create post');
@@ -64,109 +51,56 @@ export default function CreatePost() {
 
   return (
     <Layout>
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold mb-8">Write a new post</h1>
+      <div className="page">
+        <h1 className="serif" style={{ fontSize: 28, fontWeight: 500, marginBottom: 28, color: '#F1F1F4' }}>
+          Write a new post
+        </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-lg"
-            placeholder="Give your post a clear title"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cover Image
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full text-sm"
-          />
-          {uploading && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
-          {coverImageUrl && (
-            <img
-              src={coverImageUrl}
-              alt="Cover preview"
-              className="mt-3 max-h-48 rounded-lg object-cover"
-            />
+        <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.12)', color: '#fca5a5', padding: 12, borderRadius: 10, fontSize: 14 }}>
+              {error}
+            </div>
           )}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Content
-          </label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows={16}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm"
-            placeholder="Write your post here..."
-          />
-        </div>
+          <div>
+            <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Title</label>
+            <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Give your post a clear title" style={{ fontSize: 17 }} />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tags (comma separated)
-          </label>
-          <input
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-            placeholder="javascript, algorithms, learning"
-          />
-        </div>
+          <div>
+            <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Cover image (optional)</label>
+            <input type="file" accept="image/*" onChange={handleImageUpload} style={{ color: '#8B93A7', fontSize: 13 }} />
+            {uploading && <p className="faint" style={{ fontSize: 13, marginTop: 6 }}>Uploading…</p>}
+            {coverImageUrl && <img src={coverImageUrl} alt="Cover" style={{ marginTop: 12, maxHeight: 180, borderRadius: 10, objectFit: 'cover' }} />}
+          </div>
 
-        <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="status"
-              value="draft"
-              checked={status === 'draft'}
-              onChange={() => setStatus('draft')}
-            />
-            <span>Save as Draft</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="status"
-              value="published"
-              checked={status === 'published'}
-              onChange={() => setStatus('published')}
-            />
-            <span>Publish</span>
-          </label>
-        </div>
+          <div>
+            <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Content</label>
+            <textarea className="input" value={content} onChange={(e) => setContent(e.target.value)} required rows={14} placeholder="Write your post…" />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading || uploading}
-          className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-60 transition"
-        >
-          {loading ? 'Saving...' : status === 'published' ? 'Publish Post' : 'Save Draft'}
-        </button>
-      </form>
-    </div>
+          <div>
+            <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Tags (comma separated)</label>
+            <input className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="javascript, algorithms, learning" />
+          </div>
+
+          <div style={{ display: 'flex', gap: 24, color: '#F1F1F4', fontSize: 14 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="radio" name="status" checked={status === 'draft'} onChange={() => setStatus('draft')} />
+              Draft
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="radio" name="status" checked={status === 'published'} onChange={() => setStatus('published')} />
+              Publish
+            </label>
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={loading || uploading} style={{ alignSelf: 'flex-start' }}>
+            {loading ? 'Saving…' : status === 'published' ? 'Publish Post' : 'Save Draft'}
+          </button>
+        </form>
+      </div>
     </Layout>
   );
 }

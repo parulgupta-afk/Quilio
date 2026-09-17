@@ -4,43 +4,21 @@ import api from '../services/api';
 
 export default function SimilarPosts({ postId }) {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     if (!postId) return;
-
-    const fetchSimilar = async () => {
-      try {
-        const { data } = await api.get(`/recommend/similar/${postId}?limit=4`);
-        setPosts(data.posts || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSimilar();
+    api.get(`/recommend/similar/${postId}?limit=4`)
+      .then((r) => setPosts(r.data.posts || []))
+      .catch(() => {});
   }, [postId]);
-
-  if (loading || posts.length === 0) return null;
-
+  if (!posts.length) return null;
   return (
-    <section className="mt-16 border-t pt-10">
-      <h2 className="text-xl font-bold mb-6">Similar Posts</h2>
-      <div className="grid sm:grid-cols-2 gap-4">
-        {posts.map((post) => (
-          <Link
-            key={post._id}
-            to={`/post/${post.slug}`}
-            className="block p-5 bg-white border border-gray-200 rounded-xl hover:shadow-md transition"
-          >
-            <h3 className="font-semibold text-gray-900 hover:text-indigo-600 line-clamp-2">
-              {post.title}
-            </h3>
-            <p className="text-sm text-gray-500 mt-2">
-              {post.author?.name} · {post.likesCount || 0} likes
-            </p>
+    <section style={{ marginTop: 48, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 32 }}>
+      <h2 className="serif" style={{ fontSize: 20, marginBottom: 20, color: '#F1F1F4' }}>Similar Posts</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {posts.map((p) => (
+          <Link key={p._id} to={`/post/${p.slug}`} className="card" style={{ marginBottom: 0 }}>
+            <h3 style={{ fontSize: 16 }}>{p.title}</h3>
+            <p className="muted" style={{ fontSize: 13, margin: 0 }}>{p.author?.name}</p>
           </Link>
         ))}
       </div>

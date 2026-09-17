@@ -1,10 +1,10 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
-const Logo = ({ size = 22 }) => (
+const Logo = ({ size = 30 }) => (
   <svg width={size} height={size} viewBox="0 0 88 88" fill="none">
-    <path d="M44 6C23 6 6 23 6 44s17 38 38 38c9 0 17.3-3.2 23.8-8.6" stroke="#8B7CF6" strokeWidth="7" strokeLinecap="round"/>
-    <circle cx="44" cy="44" r="12" fill="#8B7CF6"/>
+    <path d="M44 6C23 6 6 23 6 44s17 38 38 38c9 0 17.3-3.2 23.8-8.6" stroke="#8B7CF6" strokeWidth="7" strokeLinecap="round" />
+    <circle cx="44" cy="44" r="12" fill="#8B7CF6" />
   </svg>
 );
 
@@ -12,110 +12,81 @@ export default function Layout({ children }) {
   const { isAuthenticated, user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const isActive = (path) => location.pathname === path;
+  const active = (path) => (location.pathname === path ? 'active' : '');
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
-      {/* Rail nav */}
-      <nav
-        className="hidden sm:flex flex-col items-center py-6 gap-7 sticky top-0 h-screen"
-        style={{ width: 76, borderRight: '1px solid var(--border)' }}
-      >
-        <Link to="/" className="mb-2">
-          <Logo size={30} />
+    <div className="shell">
+      <nav className="railnav">
+        <Link to="/" style={{ marginBottom: 8 }}>
+          <Logo />
         </Link>
 
-        <Link
-          to="/"
-          className="w-10 h-10 rounded-[10px] flex items-center justify-center"
-          style={{
-            background: isActive('/') ? 'rgba(99,102,241,0.14)' : 'transparent',
-            color: isActive('/') ? '#C9C9FF' : 'var(--text-muted)',
-          }}
-          title="Home"
-        >
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9h12v-9"/>
+        <Link to="/" className={active('/')} title="Home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M4 11.5 12 5l8 6.5" />
+            <path d="M6 10v9h12v-9" />
           </svg>
         </Link>
 
-        <Link
-          to="/search"
-          className="w-10 h-10 rounded-[10px] flex items-center justify-center"
-          style={{
-            background: isActive('/search') ? 'rgba(99,102,241,0.14)' : 'transparent',
-            color: isActive('/search') ? '#C9C9FF' : 'var(--text-muted)',
-          }}
-          title="Search"
-        >
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        <Link to="/search" className={active('/search')} title="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
           </svg>
         </Link>
 
         {isAuthenticated && (
           <>
-            <Link
-              to="/write"
-              className="w-10 h-10 rounded-[10px] flex items-center justify-center"
-              style={{
-                background: isActive('/write') ? 'rgba(99,102,241,0.14)' : 'transparent',
-                color: isActive('/write') ? '#C9C9FF' : 'var(--text-muted)',
-              }}
-              title="Write"
-            >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M5 4h11l3 3v13H5z"/><path d="M9 9h7M9 13h7M9 17h4"/>
+            <Link to="/write" className={active('/write')} title="Write">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M5 4h11l3 3v13H5z" />
+                <path d="M9 9h7M9 13h7M9 17h4" />
               </svg>
             </Link>
 
-            <Link
-              to="/notifications"
-              className="w-10 h-10 rounded-[10px] flex items-center justify-center"
-              style={{
-                background: isActive('/notifications') ? 'rgba(99,102,241,0.14)' : 'transparent',
-                color: isActive('/notifications') ? '#C9C9FF' : 'var(--text-muted)',
-              }}
-              title="Notifications"
-            >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M12 21s-7-4.6-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.4-9.5 9-9.5 9Z"/>
+            <Link to="/notifications" className={active('/notifications')} title="Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </Link>
 
             <Link
               to={`/profile/${user?._id}`}
-              className="mt-auto w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold"
-              style={{ background: 'linear-gradient(135deg,var(--accent-1),var(--accent-2))' }}
               title={user?.name}
+              style={{ marginTop: 'auto' }}
             >
-              {user?.name?.charAt(0) || 'U'}
+              <div className="avatar">{user?.name?.charAt(0) || 'U'}</div>
             </Link>
           </>
         )}
+
+        {!isAuthenticated && (
+          <Link to="/login" style={{ marginTop: 'auto', fontSize: 12, color: '#C9C9FF' }}>
+            Login
+          </Link>
+        )}
       </nav>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile top bar */}
-        <header
-          className="sm:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-20"
-          style={{ background: 'rgba(11,13,18,0.9)', backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--border)' }}
-        >
-          <Link to="/" className="flex items-center gap-2 serif text-[17px]">
+      <div className="main-area">
+        <header className="mobile-header">
+          <Link to="/" className="brand">
             <Logo size={20} /> Quilio
           </Link>
-          <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#8B93A7' }}>
             {isAuthenticated ? (
-              <button onClick={() => { logout(); navigate('/'); }}>Logout</button>
+              <button
+                onClick={() => { logout(); navigate('/'); }}
+                style={{ background: 'none', border: 'none', color: '#8B93A7' }}
+              >
+                Logout
+              </button>
             ) : (
               <Link to="/login">Login</Link>
             )}
           </div>
         </header>
-
-        <main className="flex-1">{children}</main>
+        {children}
       </div>
     </div>
   );

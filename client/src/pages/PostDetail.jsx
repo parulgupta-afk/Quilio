@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
-import ChatWithPost from '../components/ChatWithPost';
 import Layout from '../components/Layout';
+import ChatWithPost from '../components/ChatWithPost';
 import SimilarPosts from '../components/SimilarPosts';
 
 export default function PostDetail() {
@@ -19,40 +19,38 @@ export default function PostDetail() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const load = async () => {
       try {
         const { data } = await api.get(`/posts/${slug}`);
         setPost(data);
-        const commentsRes = await api.get(`/social/comments/${data._id}`);
-        setComments(commentsRes.data);
+        const c = await api.get(`/social/comments/${data._id}`);
+        setComments(c.data || []);
       } catch (err) {
         setError(err.response?.data?.message || 'Post not found');
       } finally {
         setLoading(false);
       }
     };
-    fetchPost();
+    load();
   }, [slug]);
 
   const handleLike = async () => {
-    if (!isAuthenticated) return alert('Please login to like posts');
+    if (!isAuthenticated) return alert('Please login');
     try {
       if (liked) {
         await api.delete(`/social/like/${post._id}`);
-        setPost((p) => ({ ...p, likesCount: p.likesCount - 1 }));
+        setPost((p) => ({ ...p, likesCount: (p.likesCount || 1) - 1 }));
         setLiked(false);
       } else {
         await api.post(`/social/like/${post._id}`);
-        setPost((p) => ({ ...p, likesCount: p.likesCount + 1 }));
+        setPost((p) => ({ ...p, likesCount: (p.likesCount || 0) + 1 }));
         setLiked(true);
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleBookmark = async () => {
-    if (!isAuthenticated) return alert('Please login to bookmark posts');
+    if (!isAuthenticated) return alert('Please login');
     try {
       if (bookmarked) {
         await api.delete(`/social/bookmark/${post._id}`);
@@ -61,36 +59,26 @@ export default function PostDetail() {
         await api.post(`/social/bookmark/${post._id}`);
         setBookmarked(true);
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (e) { console.error(e); }
   };
 
-  const handleAddComment = async (e) => {
+  const handleComment = async (e) => {
     e.preventDefault();
-    if (!isAuthenticated) return alert('Please login to comment');
-    if (!newComment.trim()) return;
+    if (!isAuthenticated || !newComment.trim()) return;
     setSubmitting(true);
     try {
-      const { data } = await api.post(`/social/comment/${post._id}`, {
-        content: newComment,
-      });
+      const { data } = await api.post(`/social/comment/${post._id}`, { content: newComment });
       setComments((prev) => [...prev, data]);
-      setPost((p) => ({ ...p, commentsCount: p.commentsCount + 1 }));
+      setPost((p) => ({ ...p, commentsCount: (p.commentsCount || 0) + 1 }));
       setNewComment('');
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setSubmitting(false); }
   };
 
   if (loading) {
     return (
       <Layout>
-        <div className="max-w-3xl mx-auto px-6 py-20 text-center" style={{ color: 'var(--text-muted)' }}>
-          Loading post…
-        </div>
+        <div className="page muted" style={{ textAlign: 'center', paddingTop: 80 }}>Loading…</div>
       </Layout>
     );
   }
@@ -98,9 +86,9 @@ export default function PostDetail() {
   if (error || !post) {
     return (
       <Layout>
-        <div className="max-w-3xl mx-auto px-6 py-20 text-center">
-          <p className="mb-4" style={{ color: '#fca5a5' }}>{error || 'Post not found'}</p>
-          <Link to="/" style={{ color: '#C9C9FF' }}>← Back to home</Link>
+        <div className="page" style={{ textAlign: 'center', paddingTop: 80 }}>
+          <p style={{ color: '#fca5a5', marginBottom: 16 }}>{error || 'Not found'}</p>
+          <Link to="/" style={{ color: '#C9C9FF' }}>← Back home</Link>
         </div>
       </Layout>
     );
@@ -108,189 +96,81 @@ export default function PostDetail() {
 
   return (
     <Layout>
-      {/* Article + Chat side-by-side on wide screens */}
-      <div style={{ display: 'flex', maxWidth: 1180, margin: '0 auto' }}>
+      <div className="page">
+        <div style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {post.tags?.map((t) => <span key={t} className="chip">{t}</span>)}
+        </div>
 
-        {/* ── Reader column ── */}
-        <article style={{ flex: 1, maxWidth: 680, padding: '48px 32px 100px' }}>
+        <h1 className="serif" style={{ fontSize: 36, fontWeight: 500, lineHeight: 1.2, marginBottom: 18, color: '#F1F1F4' }}>
+          {post.title}
+        </h1>
 
-          {/* Kicker / meta */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, color: 'var(--text-faint)', fontSize: 13 }}>
-            {post.tags?.slice(0, 1).map((t) => <span key={t}>{t}</span>)}
-            {post.tags?.length > 0 && <span>·</span>}
-            <span>{post.viewsCount || 0} views</span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28, color: '#8B93A7', fontSize: 14 }}>
+          <div className="avatar">{post.author?.name?.charAt(0) || 'U'}</div>
+          <span><b style={{ color: '#F1F1F4' }}>{post.author?.name}</b></span>
+          <span>·</span>
+          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+          <span>·</span>
+          <span>{post.viewsCount || 0} views</span>
+        </div>
 
-          {/* Title */}
-          <h1
-            className="serif"
-            style={{ fontWeight: 500, fontSize: 38, lineHeight: 1.18, margin: '0 0 18px' }}
-          >
-            {post.title}
-          </h1>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderTop: '1px solid rgba(255,255,255,0.08)', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: 32, flexWrap: 'wrap' }}>
+          <button onClick={handleLike} className="btn btn-ghost" style={{ padding: '8px 14px', fontSize: 13 }}>
+            ❤️ {post.likesCount || 0}
+          </button>
+          <button onClick={handleBookmark} className="btn btn-ghost" style={{ padding: '8px 14px', fontSize: 13 }}>
+            🔖 {bookmarked ? 'Saved' : 'Save'}
+          </button>
+          <span className="faint" style={{ fontSize: 13 }}>💬 {post.commentsCount || 0}</span>
+          <Link to={`/learn/${post._id}`} className="btn btn-primary" style={{ marginLeft: 'auto', padding: '8px 16px', fontSize: 13 }}>
+            🧠 Learn This
+          </Link>
+        </div>
 
-          {/* Byline */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 34, color: 'var(--text-muted)', fontSize: 14 }}>
-            <div
-              style={{
-                width: 34, height: 34, borderRadius: '50%',
-                background: 'linear-gradient(135deg,var(--accent-1),var(--accent-2))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 600, fontSize: 13, color: '#fff', flexShrink: 0,
-              }}
-            >
-              {post.author?.name?.charAt(0) || 'U'}
-            </div>
-            <div>
-              <b style={{ color: 'var(--text)', fontWeight: 500 }}>{post.author?.name}</b>
-              <br />
-              <time style={{ fontSize: 12.5 }}>
-                {new Date(post.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </time>
-            </div>
-          </div>
+        <div className="serif" style={{ fontSize: 18, lineHeight: 1.75, color: '#DADCE4', whiteSpace: 'pre-wrap', marginBottom: 48 }}>
+          {post.content}
+        </div>
 
-          {/* Tags */}
-          {post.tags?.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-              {post.tags.map((tag) => (
-                <span key={tag} className="chip">{tag}</span>
-              ))}
-            </div>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 32 }}>
+          <h2 className="serif" style={{ fontSize: 20, marginBottom: 20, color: '#F1F1F4' }}>
+            Comments ({comments.length})
+          </h2>
+
+          {isAuthenticated && (
+            <form onSubmit={handleComment} style={{ marginBottom: 28 }}>
+              <textarea
+                className="input"
+                rows={3}
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment…"
+                style={{ marginBottom: 10 }}
+              />
+              <button type="submit" className="btn btn-primary" disabled={submitting || !newComment.trim()} style={{ padding: '8px 16px', fontSize: 13 }}>
+                {submitting ? 'Posting…' : 'Post Comment'}
+              </button>
+            </form>
           )}
 
-          {/* Action bar */}
-          <div
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
-              padding: '14px 0', marginBottom: 34,
-            }}
-          >
-            <button
-              onClick={handleLike}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)',
-                background: liked ? 'rgba(239,68,68,0.12)' : 'var(--bg-card)',
-                color: liked ? '#fca5a5' : 'var(--text-muted)',
-                cursor: 'pointer', fontSize: 13.5, fontWeight: 500,
-              }}
-            >
-              ❤ {post.likesCount || 0}
-            </button>
-
-            <button
-              onClick={handleBookmark}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)',
-                background: bookmarked ? 'rgba(99,102,241,0.12)' : 'var(--bg-card)',
-                color: bookmarked ? '#C9C9FF' : 'var(--text-muted)',
-                cursor: 'pointer', fontSize: 13.5, fontWeight: 500,
-              }}
-            >
-              🔖 {bookmarked ? 'Saved' : 'Save'}
-            </button>
-
-            <span style={{ fontSize: 13.5, color: 'var(--text-faint)' }}>
-              💬 {post.commentsCount || 0}
-            </span>
-
-            <Link
-              to={`/learn/${post._id}`}
-              className="btn btn-primary"
-              style={{ marginLeft: 'auto', padding: '9px 16px', fontSize: 13.5 }}
-            >
-              🧠 Learn This
-            </Link>
-          </div>
-
-          {/* Prose */}
-          <div
-            className="serif"
-            style={{
-              fontSize: 18.5, lineHeight: 1.75, color: '#DADCE4',
-              marginBottom: 48, whiteSpace: 'pre-wrap',
-            }}
-          >
-            {post.content}
-          </div>
-
-          {/* Similar posts */}
-          {post && <SimilarPosts postId={post._id} />}
-
-          {/* Comments */}
-          <section style={{ borderTop: '1px solid var(--border)', paddingTop: 36 }}>
-            <h2 className="serif" style={{ fontSize: 22, fontWeight: 500, marginBottom: 24 }}>
-              Comments ({comments.length})
-            </h2>
-
-            {isAuthenticated && (
-              <form onSubmit={handleAddComment} style={{ marginBottom: 28 }}>
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  rows={3}
-                  placeholder="Write a comment…"
-                  style={{
-                    width: '100%', background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border-strong)', borderRadius: 10,
-                    padding: '12px 14px', color: 'var(--text)', fontSize: 14.5,
-                    outline: 'none', resize: 'vertical', marginBottom: 10,
-                    fontFamily: 'inherit',
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={submitting || !newComment.trim()}
-                  className="btn btn-primary"
-                  style={{ padding: '9px 18px', fontSize: 13.5 }}
-                >
-                  {submitting ? 'Posting…' : 'Post Comment'}
-                </button>
-              </form>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {comments.length === 0 ? (
-                <p style={{ color: 'var(--text-faint)', fontSize: 14 }}>
-                  No comments yet. Be the first!
-                </p>
-              ) : (
-                comments.map((comment) => (
-                  <div key={comment._id} style={{ display: 'flex', gap: 12 }}>
-                    <div
-                      style={{
-                        width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                        background: 'linear-gradient(135deg,var(--accent-1),var(--accent-2))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 600, fontSize: 12, color: '#fff',
-                      }}
-                    >
-                      {comment.author?.name?.charAt(0) || 'U'}
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontWeight: 500, fontSize: 13.5, color: 'var(--text)' }}>
-                          {comment.author?.name}
-                        </span>
-                        <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>
-                          {new Date(comment.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0, lineHeight: 1.55 }}>
-                        {comment.content}
-                      </p>
-                    </div>
+          {comments.length === 0 ? (
+            <p className="faint" style={{ fontSize: 14 }}>No comments yet.</p>
+          ) : (
+            comments.map((c) => (
+              <div key={c._id} style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+                <div className="avatar">{c.author?.name?.charAt(0) || 'U'}</div>
+                <div>
+                  <div style={{ fontSize: 13, marginBottom: 4 }}>
+                    <b style={{ color: '#F1F1F4' }}>{c.author?.name}</b>
+                    <span className="faint" style={{ marginLeft: 8 }}>{new Date(c.createdAt).toLocaleDateString()}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </section>
-        </article>
+                  <p style={{ fontSize: 14, color: '#8B93A7', lineHeight: 1.5 }}>{c.content}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </section>
 
-        {/* ── Chat panel ── */}
+        {post && <SimilarPosts postId={post._id} />}
         {post && <ChatWithPost postId={post._id} />}
       </div>
     </Layout>
