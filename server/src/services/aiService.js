@@ -1,6 +1,12 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+function getGenAI() {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error('GEMINI_API_KEY is missing in server/.env');
+  }
+  return new GoogleGenerativeAI(key);
+}
 
 // ==================== EMBEDDINGS ====================
 
@@ -10,7 +16,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  */
 async function generateEmbedding(text) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    const model = getGenAI().getGenerativeModel({ model: 'text-embedding-004' });
     const result = await model.embedContent(text);
     return result.embedding.values;
   } catch (error) {
@@ -82,8 +88,8 @@ function chunkText(text, maxChunkSize = 500) {
  */
 async function chatWithPost(question, contextChunks, conversationHistory = []) {
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    const model = getGenAI().getGenerativeModel({
+      model: 'gemini-2.0-flash',
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 1024,
@@ -166,90 +172,204 @@ function cosineSimilarity(vecA, vecB) {
  * Extract key concepts + generate a quiz from post content
  */
 async function generateLearnContent(title, content) {
-  try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-      },
-    });
+  const prompt = `You are an expert educational content creator.
 
-    const prompt = `You are an expert educational content creator.
-
-Given the following technical article, generate a learning package.
+Given this technical article, generate a learning package as JSON only.
 
 ARTICLE TITLE: ${title}
 
 ARTICLE CONTENT:
-${content.substring(0, 8000)}
+${String(content || "").substring(0, 8000)}
 
-Return a JSON object with this exact structure:
+Return ONLY a JSON object (no markdown) with this shape:
 {
-  "summary": "A clear 2-3 sentence summary of the article",
-  "beginnerExplanation": "Explain the core idea as if the reader is new to the topic (3-5 sentences)",
-  "intermediateExplanation": "A deeper explanation for someone with some background (3-5 sentences)",
-  "keyConcepts": ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"],
-  "terminology": [
-    { "term": "Term", "definition": "Short definition from the article" }
-  ],
-  "prerequisites": ["What to know before reading this"],
+  "summary": "2-3 sentence summary",
+  "beginnerExplanation": "simple explanation 3-5 sentences",
+  "intermediateExplanation": "deeper explanation 3-5 sentences",
+  "keyConcepts": ["c1","c2","c3","c4","c5"],
+  "terminology": [{"term":"Term","definition":"definition"}],
+  "prerequisites": ["prereq1","prereq2"],
   "questions": [
     {
-      "question": "Question text?",
+      "question": "Question?",
       "type": "mcq",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correctAnswer": "Option A",
-      "explanation": "Why this is correct"
-    },
-    {
-      "question": "True or False statement?",
-      "type": "true_false",
-      "options": ["True", "False"],
-      "correctAnswer": "True",
-      "explanation": "Explanation"
+      "options": ["A","B","C","D"],
+      "correctAnswer": "A",
+      "explanation": "why"
     }
   ],
-  "flashcards": [
-    { "front": "Term or question", "back": "Answer or definition" }
-  ]
+  "flashcards": [{"front":"prompt","back":"answer"}]
 }
 
 Rules:
-- Generate 5-8 key concepts
-- Generate 6-8 quiz questions (mix of MCQ and True/False)
-- Generate 6-10 flashcards
-- Generate 3-6 terminology entries
-- Generate 2-4 prerequisites
-- Questions and flashcards must be answerable from the article only
-- correctAnswer must exactly match one of the options
-- Keep language clear and educational
-- Return ONLY valid JSON, no markdown`;
+- 5-8 keyConcepts
+- 6-8 questions mixing mcq and true_false
+- true_false options must be ["True","False"]
+- correctAnswer must exactly equal one option
+- 6-10 flashcards
+- content must come from the article`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+  const modelsToTry = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+    "gemini-flash-latest",
+  ];
 
-    // Parse JSON (handle possible markdown wrapping)
-    let cleaned = text.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/```json?\n?/g, '').replace(/```$/g, '').trim();
+  let lastError = null;
+  let data = null;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const model = getGenAI().getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 4096,
+          responseMimeType: "application/json",
+        },
+      });
+
+      const result = await model.generateContent(prompt);
+      let text = result.response.text().trim();
+      if (text.startsWith("```")) {
+        text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+      }
+      // Extract JSON object if extra text exists
+      const first = text.indexOf("{");
+      const last = text.lastIndexOf("}");
+      if (first >= 0 && last > first) {
+        text = text.slice(first, last + 1);
+      }
+
+      data = JSON.parse(text);
+      console.log("Learn content generated with model:", modelName);
+      lastError = null;
+      break;
+    } catch (err) {
+      lastError = err;
+      console.warn("Learn model failed:", modelName, err.message);
     }
-
-    const data = JSON.parse(cleaned);
-
-    // Basic validation
-    if (!data.keyConcepts || !data.questions || !Array.isArray(data.questions)) {
-      throw new Error('Invalid response structure from Gemini');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Learn content generation error:', error.message);
-    throw new Error('Failed to generate learning content');
   }
-}
 
+  if (!data) {
+    // Offline-safe fallback so UI still works without Gemini
+    console.error("All Gemini models failed for Learn This:", lastError?.message);
+    const words = String(content || "")
+      .replace(/[#*`]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 4)
+      .slice(0, 40);
+    const topic = title || "this article";
+    data = {
+      summary: `This learning package is based on "${topic}". Review the key ideas below, then try the quiz.`,
+      beginnerExplanation: `This article is about ${topic}. Read the key concepts and flashcards, then test yourself with the quiz questions.`,
+      intermediateExplanation: `Focus on the main arguments in "${topic}". Use the terminology list to lock definitions, then complete the quiz to check retention.`,
+      keyConcepts: words.length
+        ? [...new Set(words.map((w) => w.replace(/[^a-zA-Z0-9-]/g, "")))].filter(Boolean).slice(0, 6)
+        : [topic, "Core idea", "Key terms", "Practice", "Summary"],
+      terminology: [
+        { term: "Main topic", definition: topic },
+        { term: "Goal", definition: "Understand and recall the article's core points" },
+      ],
+      prerequisites: ["Basic reading of the article"],
+      questions: [
+        {
+          question: `What is the main topic of the article?`,
+          type: "mcq",
+          options: [topic, "Unrelated sports news", "A random recipe", "None of the above"],
+          correctAnswer: topic,
+          explanation: "The title and content focus on this topic.",
+        },
+        {
+          question: "True or False: Active recall (quiz/flashcards) helps retention.",
+          type: "true_false",
+          options: ["True", "False"],
+          correctAnswer: "True",
+          explanation: "Testing yourself strengthens memory.",
+        },
+        {
+          question: "What should you do after reading key concepts?",
+          type: "mcq",
+          options: ["Ignore them", "Practice with flashcards or quiz", "Close the tab", "Only memorize the title"],
+          correctAnswer: "Practice with flashcards or quiz",
+          explanation: "Practice turns passive reading into learning.",
+        },
+        {
+          question: "True or False: This quiz is meant to check understanding of the article.",
+          type: "true_false",
+          options: ["True", "False"],
+          correctAnswer: "True",
+          explanation: "Learn This is built from the post content.",
+        },
+      ],
+      flashcards: [
+        { front: "What is this article mainly about?", back: topic },
+        { front: "Best way to remember concepts?", back: "Use flashcards and take the quiz" },
+        { front: "Where do answers come from?", back: "The article content itself" },
+      ],
+      _fallback: true,
+    };
+  }
+
+  // Normalize questions for schema safety
+  const questions = (data.questions || [])
+    .map((q) => {
+      const type = q.type === "true_false" ? "true_false" : "mcq";
+      let options = Array.isArray(q.options) ? q.options.map(String) : [];
+      if (type === "true_false") options = ["True", "False"];
+      if (!options.length) options = ["Option A", "Option B", "Option C", "Option D"];
+      let correctAnswer = String(q.correctAnswer || options[0]);
+      if (!options.includes(correctAnswer)) correctAnswer = options[0];
+      return {
+        question: String(q.question || "Question"),
+        type,
+        options,
+        correctAnswer,
+        explanation: String(q.explanation || ""),
+      };
+    })
+    .filter((q) => q.question);
+
+  const flashcards = (data.flashcards || [])
+    .map((f) => ({
+      front: String(f.front || ""),
+      back: String(f.back || ""),
+    }))
+    .filter((f) => f.front && f.back);
+
+  const terminology = (data.terminology || [])
+    .map((t) => ({
+      term: String(t.term || t.name || ""),
+      definition: String(t.definition || t.meaning || ""),
+    }))
+    .filter((t) => t.term && t.definition);
+
+  return {
+    summary: String(data.summary || ""),
+    beginnerExplanation: String(data.beginnerExplanation || ""),
+    intermediateExplanation: String(data.intermediateExplanation || ""),
+    keyConcepts: Array.isArray(data.keyConcepts)
+      ? data.keyConcepts.map(String).filter(Boolean)
+      : [],
+    terminology,
+    prerequisites: Array.isArray(data.prerequisites)
+      ? data.prerequisites.map(String).filter(Boolean)
+      : [],
+    questions: questions.length
+      ? questions
+      : [
+          {
+            question: `What is the article "${title}" about?`,
+            type: "mcq",
+            options: [title, "Something else", "Not sure", "None"],
+            correctAnswer: title,
+            explanation: "Based on the post title.",
+          },
+        ],
+    flashcards,
+  };
+}
 
 // ==================== WRITE WITH AI ====================
 
@@ -259,8 +379,8 @@ Rules:
  */
 async function writeWithAI({ mode, title, draft, userMessage, history = [] }) {
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    const model = getGenAI().getGenerativeModel({
+      model: 'gemini-2.0-flash',
       generationConfig: {
         temperature: 0.65,
         maxOutputTokens: 4096,

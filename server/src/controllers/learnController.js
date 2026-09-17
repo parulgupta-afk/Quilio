@@ -79,7 +79,10 @@ const getLearnContent = async (req, res) => {
     res.status(200).json(formatLearnResponse(quiz, false));
   } catch (error) {
     console.error('Get learn content error:', error.message);
-    res.status(500).json({ message: 'Failed to generate learning content' });
+    res.status(500).json({
+      message: error.message || 'Failed to generate learning content',
+      detail: process.env.NODE_ENV === 'development' ? String(error.stack || '') : undefined,
+    });
   }
 };
 
