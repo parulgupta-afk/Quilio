@@ -7,9 +7,14 @@ const questionSchema = new mongoose.Schema({
     enum: ['mcq', 'true_false'],
     default: 'mcq',
   },
-  options: [String], // for MCQ
+  options: [String],
   correctAnswer: { type: String, required: true },
   explanation: { type: String, default: '' },
+});
+
+const flashcardSchema = new mongoose.Schema({
+  front: { type: String, required: true },
+  back: { type: String, required: true },
 });
 
 const quizSchema = new mongoose.Schema(
@@ -20,19 +25,23 @@ const quizSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    keyConcepts: {
-      type: [String],
+    keyConcepts: { type: [String], default: [] },
+    summary: { type: String, default: '' },
+    beginnerExplanation: { type: String, default: '' },
+    intermediateExplanation: { type: String, default: '' },
+    terminology: {
+      type: [
+        {
+          term: String,
+          definition: String,
+        },
+      ],
       default: [],
     },
-    summary: {
-      type: String,
-      default: '',
-    },
+    prerequisites: { type: [String], default: [] },
     questions: [questionSchema],
-    generatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    flashcards: [flashcardSchema],
+    generatedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

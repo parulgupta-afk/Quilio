@@ -101,10 +101,11 @@ async function chatWithPost(question, contextChunks, conversationHistory = []) {
     const systemInstruction = `You are a helpful AI tutor for the Quilio learning platform.
 
 Answer the user's question using ONLY the provided article context below.
+- Start from the article content. Prefer saying "Based on this article..." when appropriate.
 - If the answer is in the context, explain it clearly and cite the source number like [Source 1].
-- If the article does not contain enough information to answer, say so honestly.
-- Do not invent information that is not present in the context.
-- Keep answers clear, structured, and educational.`;
+- If the article does not contain enough information, say: "This article does not cover that clearly." Do not invent facts.
+- Keep answers clear, structured, and educational.
+- Never claim general web knowledge as if it came from the article.`;
 
     // Build conversation
     const historyText = conversationHistory
@@ -177,7 +178,7 @@ async function generateLearnContent(title, content) {
       model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.4,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         responseMimeType: 'application/json',
       },
     });
@@ -194,7 +195,13 @@ ${content.substring(0, 8000)}
 Return a JSON object with this exact structure:
 {
   "summary": "A clear 2-3 sentence summary of the article",
+  "beginnerExplanation": "Explain the core idea as if the reader is new to the topic (3-5 sentences)",
+  "intermediateExplanation": "A deeper explanation for someone with some background (3-5 sentences)",
   "keyConcepts": ["Concept 1", "Concept 2", "Concept 3", "Concept 4", "Concept 5"],
+  "terminology": [
+    { "term": "Term", "definition": "Short definition from the article" }
+  ],
+  "prerequisites": ["What to know before reading this"],
   "questions": [
     {
       "question": "Question text?",
@@ -210,13 +217,19 @@ Return a JSON object with this exact structure:
       "correctAnswer": "True",
       "explanation": "Explanation"
     }
+  ],
+  "flashcards": [
+    { "front": "Term or question", "back": "Answer or definition" }
   ]
 }
 
 Rules:
-- Generate exactly 5-8 key concepts
-- Generate exactly 6-8 questions (mix of MCQ and True/False)
-- Questions must be answerable from the article
+- Generate 5-8 key concepts
+- Generate 6-8 quiz questions (mix of MCQ and True/False)
+- Generate 6-10 flashcards
+- Generate 3-6 terminology entries
+- Generate 2-4 prerequisites
+- Questions and flashcards must be answerable from the article only
 - correctAnswer must exactly match one of the options
 - Keep language clear and educational
 - Return ONLY valid JSON, no markdown`;

@@ -3,54 +3,54 @@ const QuizAttempt = require('../models/QuizAttempt');
 const Post = require('../models/Post');
 const { generateLearnContent } = require('../services/aiService');
 
-// Simple rate limit for quiz generation
 const learnUsage = new Map();
 
 function checkLearnRateLimit(userId) {
-  const limit = 10; // 10 quiz generations per day
+  const limit = 10;
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
-
   let usage = learnUsage.get(userId.toString());
   if (!usage || now > usage.resetAt) {
     usage = { count: 0, resetAt: now + dayMs };
     learnUsage.set(userId.toString(), usage);
   }
-
   if (usage.count >= limit) return false;
   usage.count += 1;
   return true;
 }
 
-// @desc    Get or generate Learn This content for a post
+function formatLearnResponse(quiz, cached) {
+  const safeQuestions = (quiz.questions || []).map((q) => ({
+    question: q.question,
+    type: q.type,
+    options: q.options,
+  }));
+
+  return {
+    summary: quiz.summary || '',
+    beginnerExplanation: quiz.beginnerExplanation || '',
+    intermediateExplanation: quiz.intermediateExplanation || '',
+    keyConcepts: quiz.keyConcepts || [],
+    terminology: quiz.terminology || [],
+    prerequisites: quiz.prerequisites || [],
+    flashcards: quiz.flashcards || [],
+    questions: safeQuestions,
+    quizId: quiz._id,
+    cached: !!cached,
+  };
+}
+
+// @desc    Get or generate Learn This content
 // @route   GET /api/learn/:postId
-// @access  Private
 const getLearnContent = async (req, res) => {
   try {
     const postId = req.params.postId;
-
-    // Check if quiz already exists
     let quiz = await Quiz.findOne({ post: postId });
 
     if (quiz) {
-      // Don't send correct answers to frontend until submission
-      const safeQuestions = quiz.questions.map((q) => ({
-        question: q.question,
-        type: q.type,
-        options: q.options,
-        // correctAnswer and explanation intentionally omitted
-      }));
-
-      return res.status(200).json({
-        summary: quiz.summary,
-        keyConcepts: quiz.keyConcepts,
-        questions: safeQuestions,
-        quizId: quiz._id,
-        cached: true,
-      });
+      return res.status(200).json(formatLearnResponse(quiz, true));
     }
 
-    // Generate new quiz
     if (!checkLearnRateLimit(req.user._id)) {
       return res.status(429).json({
         message: 'Daily Learn This limit reached. Try again tomorrow.',
@@ -67,23 +67,16 @@ const getLearnContent = async (req, res) => {
     quiz = await Quiz.create({
       post: postId,
       summary: learnData.summary || '',
+      beginnerExplanation: learnData.beginnerExplanation || '',
+      intermediateExplanation: learnData.intermediateExplanation || '',
       keyConcepts: learnData.keyConcepts || [],
+      terminology: learnData.terminology || [],
+      prerequisites: learnData.prerequisites || [],
       questions: learnData.questions || [],
+      flashcards: learnData.flashcards || [],
     });
 
-    const safeQuestions = quiz.questions.map((q) => ({
-      question: q.question,
-      type: q.type,
-      options: q.options,
-    }));
-
-    res.status(200).json({
-      summary: quiz.summary,
-      keyConcepts: quiz.keyConcepts,
-      questions: safeQuestions,
-      quizId: quiz._id,
-      cached: false,
-    });
+    res.status(200).json(formatLearnResponse(quiz, false));
   } catch (error) {
     console.error('Get learn content error:', error.message);
     res.status(500).json({ message: 'Failed to generate learning content' });
@@ -92,10 +85,9 @@ const getLearnContent = async (req, res) => {
 
 // @desc    Submit quiz answers
 // @route   POST /api/learn/:postId/submit
-// @access  Private
 const submitQuiz = async (req, res) => {
   try {
-    const { answers } = req.body; // [{ questionIndex, selectedAnswer }]
+    const { answers } = req.body;
     const postId = req.params.postId;
 
     if (!answers || !Array.isArray(answers)) {
@@ -114,9 +106,7 @@ const submitQuiz = async (req, res) => {
         question &&
         question.correctAnswer.trim().toLowerCase() ===
           (ans.selectedAnswer || '').trim().toLowerCase();
-
       if (isCorrect) correctCount += 1;
-
       return {
         questionIndex: ans.questionIndex,
         selectedAnswer: ans.selectedAnswer,
@@ -127,7 +117,9 @@ const submitQuiz = async (req, res) => {
     });
 
     const totalQuestions = quiz.questions.length;
-    const percentage = Math.round((correctCount / totalQuestions) * 100);
+    const percentage = totalQuestions
+      ? Math.round((correctCount / totalQuestions) * 100)
+      : 0;
 
     const attempt = await QuizAttempt.create({
       user: req.user._id,
@@ -158,14 +150,12 @@ const submitQuiz = async (req, res) => {
 
 // @desc    Get my learning progress
 // @route   GET /api/learn/progress/me
-// @access  Private
 const getMyProgress = async (req, res) => {
   try {
     const attempts = await QuizAttempt.find({ user: req.user._id })
       .populate('post', 'title slug')
       .sort({ createdAt: -1 })
       .limit(20);
-
     res.status(200).json(attempts);
   } catch (error) {
     console.error('Get progress error:', error.message);
