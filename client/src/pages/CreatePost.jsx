@@ -4,12 +4,12 @@ import api from '../services/api';
 import Layout from '../components/Layout';
 
 const MODES = [
-  { id: 'brainstorm', label: 'Brainstorm', hint: 'Shape ideas into a direction' },
-  { id: 'outline', label: 'Outline', hint: 'Structure the article' },
-  { id: 'expand', label: 'Expand', hint: 'Turn notes into paragraphs' },
-  { id: 'complete', label: 'Complete', hint: 'Continue the draft' },
-  { id: 'review', label: 'Review', hint: 'Critique & suggestions' },
-  { id: 'rewrite', label: 'Rewrite', hint: 'Clearer full draft' },
+  { id: 'brainstorm', label: 'Brainstorm', icon: 'lightbulb', hint: 'Shape ideas into a direction' },
+  { id: 'outline', label: 'Outline', icon: 'format_list_bulleted', hint: 'Structure the article' },
+  { id: 'expand', label: 'Expand', icon: 'open_in_full', hint: 'Turn notes into paragraphs' },
+  { id: 'complete', label: 'Complete', icon: 'auto_fix_high', hint: 'Continue the draft' },
+  { id: 'review', label: 'Review', icon: 'rate_review', hint: 'Critique & suggestions' },
+  { id: 'rewrite', label: 'Rewrite', icon: 'restart_alt', hint: 'Clearer full draft' },
 ];
 
 export default function CreatePost() {
@@ -23,7 +23,6 @@ export default function CreatePost() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Write with AI
   const [aiOpen, setAiOpen] = useState(true);
   const [mode, setMode] = useState('brainstorm');
   const [aiInput, setAiInput] = useState('');
@@ -42,430 +41,345 @@ export default function CreatePost() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const { data } = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data } = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setCoverImageUrl(data.url);
-    } catch {
-      setError('Image upload failed (Cloudinary may not be configured)');
-    } finally {
-      setUploading(false);
-    }
+    } catch { setError('Image upload failed (Cloudinary may not be configured)'); }
+    finally { setUploading(false); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
-      const tagArray = tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-      const { data } = await api.post('/posts', {
-        title,
-        content,
-        tags: tagArray,
-        status,
-        coverImageUrl,
-      });
+      const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+      const { data } = await api.post('/posts', { title, content, tags: tagArray, status, coverImageUrl });
       navigate(`/post/${data.slug}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create post');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const sendToAI = async (e) => {
     e?.preventDefault();
     if (!aiInput.trim() || aiLoading) return;
-
     const message = aiInput.trim();
     setAiInput('');
-    setMessages((m) => [...m, { role: 'user', content: message, mode }]);
+    setMessages(m => [...m, { role: 'user', content: message, mode }]);
     setAiLoading(true);
-
     try {
-      const history = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-      const { data } = await api.post('/ai/write', {
-        mode,
-        title,
-        draft: content,
-        message,
-        history,
-      });
-      setMessages((m) => [
-        ...m,
-        { role: 'assistant', content: data.reply, mode: data.mode },
-      ]);
+      const history = messages.map(m => ({ role: m.role, content: m.content }));
+      const { data } = await api.post('/ai/write', { mode, title, draft: content, message, history });
+      setMessages(m => [...m, { role: 'assistant', content: data.reply, mode: data.mode }]);
     } catch (err) {
-      setMessages((m) => [
-        ...m,
-        {
-          role: 'assistant',
-          content: err.response?.data?.message || 'AI request failed. Check GEMINI_API_KEY and try again.',
-        },
-      ]);
-    } finally {
-      setAiLoading(false);
-    }
+      setMessages(m => [...m, { role: 'assistant', content: err.response?.data?.message || 'AI request failed. Check GEMINI_API_KEY.' }]);
+    } finally { setAiLoading(false); }
   };
 
-  const applyToDraft = (text) => {
-    setContent((prev) => (prev ? prev + '\n\n' + text : text));
-  };
+  const applyToDraft = (text) => { setContent(prev => prev ? prev + '\n\n' + text : text); };
+  const replaceDraft = (text) => { setContent(text); };
 
-  const replaceDraft = (text) => {
-    setContent(text);
-  };
+  const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <Layout>
-      <div
-        style={{
-          display: 'flex',
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: '24px 16px 80px',
-          gap: 20,
-          alignItems: 'flex-start',
-        }}
-      >
-        {/* Editor */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 20,
-            }}
-          >
-            <h1
-              className="serif"
-              style={{ fontSize: 26, fontWeight: 500, color: '#F1F1F4', margin: 0 }}
-            >
-              Write a new post
-            </h1>
+      <div style={{ display: 'flex', maxWidth: 1280, margin: '0 auto', minHeight: 'calc(100vh - 144px)', flexDirection: 'column' }}>
+
+        {/* ── Draft Status Bar ── */}
+        <div className="ns-draft-bar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#908fa0' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16, color: status === 'published' ? '#22c55e' : '#c0c1ff' }}>
+              {status === 'published' ? 'cloud_done' : 'edit_document'}
+            </span>
+            <span style={{ fontWeight: 500, color: status === 'published' ? '#22c55e' : '#c0c1ff' }}>
+              {status === 'published' ? 'Publishing' : 'Draft'}
+            </span>
+            <span>·</span>
+            <span>{wordCount} words</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12, color: '#908fa0' }}>
+              <input
+                type="checkbox"
+                style={{ accentColor: '#8083ff', width: 14, height: 14 }}
+                checked={status === 'published'}
+                onChange={e => setStatus(e.target.checked ? 'published' : 'draft')}
+              />
+              Publish when saved
+            </label>
             <button
               type="button"
-              className={aiOpen ? 'btn btn-ghost' : 'btn btn-primary'}
-              style={{ padding: '9px 14px', fontSize: 13 }}
-              onClick={() => setAiOpen((o) => !o)}
+              className={aiOpen ? 'ns-btn ns-btn-surface' : 'ns-btn ns-btn-gradient'}
+              style={{ padding: '6px 12px', fontSize: 12, gap: 6 }}
+              onClick={() => setAiOpen(o => !o)}
             >
-              {aiOpen ? 'Hide AI' : '✨ Write with AI'}
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>auto_awesome</span>
+              {aiOpen ? 'Hide AI' : 'AI Co-author'}
             </button>
           </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="card"
-            style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
-          >
-            {error && (
-              <div
-                style={{
-                  background: 'rgba(239,68,68,0.12)',
-                  color: '#fca5a5',
-                  padding: 12,
-                  borderRadius: 10,
-                  fontSize: 14,
-                }}
-              >
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
-                Title
-              </label>
-              <input
-                className="input"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                placeholder="Give your post a clear title"
-                style={{ fontSize: 17 }}
-              />
-            </div>
-
-            <div>
-              <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
-                Cover image (optional)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={{ color: '#8B93A7', fontSize: 13 }}
-              />
-              {uploading && (
-                <p className="faint" style={{ fontSize: 13, marginTop: 6 }}>
-                  Uploading…
-                </p>
-              )}
-              {coverImageUrl && (
-                <img
-                  src={coverImageUrl}
-                  alt="Cover"
-                  style={{
-                    marginTop: 12,
-                    maxHeight: 160,
-                    borderRadius: 10,
-                    objectFit: 'cover',
-                  }}
-                />
-              )}
-            </div>
-
-            <div>
-              <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
-                Content
-              </label>
-              <textarea
-                className="input"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-                rows={16}
-                placeholder="Write your post — or brainstorm with AI on the right, then apply text here…"
-              />
-            </div>
-
-            <div>
-              <label className="muted" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
-                Tags (comma separated)
-              </label>
-              <input
-                className="input"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="javascript, algorithms, learning"
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: 24, color: '#F1F1F4', fontSize: 14 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="status"
-                  checked={status === 'draft'}
-                  onChange={() => setStatus('draft')}
-                />
-                Draft
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="status"
-                  checked={status === 'published'}
-                  onChange={() => setStatus('published')}
-                />
-                Publish
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading || uploading}
-              style={{ alignSelf: 'flex-start' }}
-            >
-              {loading ? 'Saving…' : status === 'published' ? 'Publish Post' : 'Save Draft'}
-            </button>
-          </form>
         </div>
 
-        {/* AI panel */}
-        {aiOpen && (
-          <aside
-            className="card"
-            style={{
-              width: 380,
-              flexShrink: 0,
-              position: 'sticky',
-              top: 24,
-              height: 'calc(100vh - 80px)',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: 0,
-              overflow: 'hidden',
-              marginBottom: 0,
-            }}
-          >
-            <div
-              style={{
-                padding: '14px 16px',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.15))',
-              }}
-            >
-              <div style={{ fontWeight: 600, color: '#F1F1F4', fontSize: 14 }}>
-                ✨ Write with AI
-              </div>
-              <div className="faint" style={{ fontSize: 12, marginTop: 4 }}>
-                Share ideas · complete · review · rewrite
-              </div>
-            </div>
+        {/* ── Main layout ── */}
+        <div style={{ flex: 1, display: 'flex', gap: 0, alignItems: 'stretch' }}>
 
-            {/* Modes */}
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 6,
-                padding: '12px 12px 8px',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              {MODES.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMode(m.id)}
-                  className="chip"
-                  title={m.hint}
-                  style={{
-                    cursor: 'pointer',
-                    borderColor: mode === m.id ? '#6366F1' : undefined,
-                    color: mode === m.id ? '#C9C9FF' : undefined,
-                    background: mode === m.id ? 'rgba(99,102,241,0.15)' : undefined,
-                  }}
-                >
-                  {m.label}
+          {/* Editor Panel */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            {/* Toolbar */}
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="ns-editor-toolbar">
+                {[
+                  { icon: 'format_bold', label: 'Bold' },
+                  { icon: 'format_italic', label: 'Italic' },
+                  { icon: 'title', label: 'Heading' },
+                  { icon: 'format_quote', label: 'Quote' },
+                  { icon: 'code', label: 'Code' },
+                  { icon: 'format_list_bulleted', label: 'List' },
+                  { icon: 'link', label: 'Link' },
+                ].map(t => (
+                  <button key={t.icon} className="ns-editor-tool" title={t.label} type="button">
+                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{t.icon}</span>
+                  </button>
+                ))}
+                <div className="ns-editor-divider" />
+                <button className="ns-editor-tool ns-editor-tool-ai" title="AI Rewrite Selection" type="button" onClick={() => setAiOpen(true)}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_fix_high</span>
+                  <span style={{ fontSize: 11, marginLeft: 2 }}>AI</span>
                 </button>
-              ))}
+              </div>
             </div>
 
-            {/* Messages */}
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: 12,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}
-            >
-              {messages.length === 0 && (
-                <div className="muted" style={{ fontSize: 13, lineHeight: 1.55, padding: 8 }}>
-                  <p style={{ marginBottom: 10 }}>
-                    Mode: <b style={{ color: '#C9C9FF' }}>{mode}</b>
-                  </p>
-                  <p style={{ marginBottom: 8 }}>Try saying:</p>
-                  <ul style={{ paddingLeft: 18, margin: 0 }}>
-                    <li style={{ marginBottom: 6 }}>
-                      “I want to write about React hooks for beginners”
-                    </li>
-                    <li style={{ marginBottom: 6 }}>“Expand these bullet points into a section”</li>
-                    <li style={{ marginBottom: 6 }}>“Review my draft for clarity”</li>
-                    <li>“Rewrite the intro to be more engaging”</li>
-                  </ul>
-                </div>
-              )}
+            {/* Editor form */}
+            <form onSubmit={handleSubmit} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px 24px', gap: 18 }}>
+              {error && <div className="ns-error">{error}</div>}
 
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
+              {/* Title */}
+              <div>
+                <input
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  required
+                  placeholder="Give your post a clear, compelling title…"
                   style={{
-                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '95%',
+                    width: '100%', background: 'transparent', border: 'none', outline: 'none',
+                    fontFamily: "'Newsreader', serif", fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 500,
+                    color: '#e2e2e9', padding: 0, lineHeight: 1.25,
                   }}
-                >
-                  <div
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: 12,
-                      fontSize: 13.5,
-                      lineHeight: 1.55,
-                      background:
-                        msg.role === 'user' ? 'rgba(99,102,241,0.3)' : '#12141C',
-                      border:
-                        msg.role === 'assistant'
-                          ? '1px solid rgba(255,255,255,0.08)'
-                          : 'none',
-                      color: '#F1F1F4',
-                      whiteSpace: 'pre-wrap',
-                    }}
-                  >
-                    {msg.role === 'assistant' && msg.mode && (
-                      <div className="ai-pill" style={{ marginBottom: 8, fontSize: 10 }}>
-                        {msg.mode}
-                      </div>
-                    )}
-                    {msg.content}
-                    {msg.role === 'assistant' && (
-                      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="chip"
-                          style={{ cursor: 'pointer', color: '#C9C9FF' }}
-                          onClick={() => applyToDraft(msg.content)}
-                        >
-                          + Append to draft
-                        </button>
-                        <button
-                          type="button"
-                          className="chip"
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => replaceDraft(msg.content)}
-                        >
-                          Replace draft
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {aiLoading && (
-                <div className="faint" style={{ fontSize: 13 }}>
-                  Thinking…
-                </div>
-              )}
-              <div ref={chatEnd} />
-            </div>
+                />
+              </div>
 
-            <form
-              onSubmit={sendToAI}
-              style={{
-                padding: 12,
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex',
-                gap: 8,
-              }}
-            >
-              <input
-                className="input"
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                placeholder={
-                  mode === 'review'
-                    ? 'Ask for a review…'
-                    : mode === 'brainstorm'
-                      ? 'Share your idea…'
-                      : 'Message the writing AI…'
-                }
-                disabled={aiLoading}
-                style={{ flex: 1, fontSize: 13 }}
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+              {/* Tags inline */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#908fa0' }}>sell</span>
+                <input
+                  value={tags}
+                  onChange={e => setTags(e.target.value)}
+                  placeholder="Add tags (comma separated): javascript, algorithms…"
+                  style={{
+                    background: 'transparent', border: 'none', outline: 'none',
+                    fontSize: 13, color: '#c7c4d7', flex: 1,
+                  }}
+                />
+              </div>
+
+              {/* Cover image */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 13, color: '#908fa0', padding: '6px 12px', borderRadius: 9999, background: '#1a1b21', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>image</span>
+                  {uploading ? 'Uploading…' : 'Cover image'}
+                  <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                </label>
+                {coverImageUrl && (
+                  <img src={coverImageUrl} alt="Cover" style={{ height: 40, borderRadius: 8, objectFit: 'cover' }} />
+                )}
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+              {/* Content textarea */}
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                required
+                placeholder="Write your post — or brainstorm with AI on the right, then apply text here…"
+                style={{
+                  flex: 1, minHeight: 360, background: 'transparent', border: 'none', outline: 'none', resize: 'none',
+                  fontFamily: "'Newsreader', serif", fontSize: 17, lineHeight: 1.8, color: '#DADCE4',
+                  padding: 0,
+                }}
               />
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={aiLoading || !aiInput.trim()}
-                style={{ padding: '10px 12px' }}
-              >
-                Send
-              </button>
+
+              {/* Submit row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <button
+                  type="submit"
+                  className="ns-btn ns-btn-gradient"
+                  disabled={loading || uploading}
+                  style={{ gap: 8 }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 17 }}>
+                    {status === 'published' ? 'publish' : 'save'}
+                  </span>
+                  {loading ? 'Saving…' : status === 'published' ? 'Publish Post' : 'Save Draft'}
+                </button>
+                <span style={{ fontSize: 12, color: '#464554' }}>{wordCount} words · {Math.ceil(wordCount / 200)} min read</span>
+              </div>
             </form>
-          </aside>
-        )}
+          </div>
+
+          {/* ── AI Co-Author Panel ── */}
+          {aiOpen && (
+            <aside style={{
+              width: 380, flexShrink: 0, borderLeft: '1px solid rgba(255,255,255,0.06)',
+              display: 'flex', flexDirection: 'column', height: 'calc(100vh - 144px)',
+              position: 'sticky', top: 144, background: '#0c0e13',
+            }}>
+              {/* Panel header */}
+              <div style={{
+                padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+                background: 'linear-gradient(135deg, rgba(128,131,255,0.12), rgba(110,0,190,0.08))',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#ddb7ff' }}>auto_awesome</span>
+                  <span style={{ fontWeight: 600, color: '#e2e2e9', fontSize: 14 }}>AI Co-author</span>
+                  <button
+                    type="button"
+                    onClick={() => setAiOpen(false)}
+                    style={{ marginLeft: 'auto', color: '#908fa0', fontSize: 18 }}
+                    className="ns-icon-btn"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+                  </button>
+                </div>
+                <p style={{ fontSize: 11, color: '#908fa0', margin: 0 }}>Brainstorm · outline · expand · review · rewrite</p>
+              </div>
+
+              {/* Mode selector */}
+              <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="ns-mode-scroller">
+                  {MODES.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`ns-mode-btn${mode === m.id ? ' active' : ''}`}
+                      title={m.hint}
+                      onClick={() => setMode(m.id)}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {messages.length === 0 && (
+                  <div style={{ padding: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#c0c1ff' }}>info</span>
+                      <span style={{ fontSize: 12, color: '#908fa0', fontWeight: 500 }}>Mode: <b style={{ color: '#c0c1ff' }}>{mode}</b></span>
+                    </div>
+                    <p style={{ fontSize: 12, color: '#908fa0', marginBottom: 8 }}>Try saying:</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {[
+                        '"I want to write about React hooks for beginners"',
+                        '"Expand these bullet points into a section"',
+                        '"Review my draft for clarity"',
+                        '"Rewrite the intro to be more engaging"',
+                      ].map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => { setAiInput(s.replace(/"/g, '')); }}
+                          style={{
+                            background: '#1a1b21', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10,
+                            padding: '8px 12px', fontSize: 12, color: '#c7c4d7', cursor: 'pointer', textAlign: 'left',
+                            transition: 'background 0.15s',
+                          }}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {messages.map((msg, i) => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                    <div className={msg.role === 'user' ? 'ns-bubble-user' : 'ns-bubble-ai'}>
+                      {msg.role === 'assistant' && msg.mode && (
+                        <span className="ns-ai-pill" style={{ marginBottom: 8, fontSize: 10 }}>{msg.mode}</span>
+                      )}
+                      {msg.content}
+                      {msg.role === 'assistant' && (
+                        <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="ns-chip"
+                            style={{ cursor: 'pointer', color: '#c0c1ff', borderColor: 'rgba(192,193,255,0.25)' }}
+                            onClick={() => applyToDraft(msg.content)}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 12 }}>add</span>
+                            Append to draft
+                          </button>
+                          <button
+                            type="button"
+                            className="ns-chip"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => replaceDraft(msg.content)}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 12 }}>swap_horiz</span>
+                            Replace draft
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {aiLoading && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#908fa0' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite', color: '#c0c1ff' }}>progress_activity</span>
+                    Thinking…
+                  </div>
+                )}
+                <div ref={chatEnd} />
+              </div>
+
+              {/* Chat input */}
+              <form onSubmit={sendToAI} style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="ns-chat-input-wrap">
+                  <input
+                    className="ns-chat-input"
+                    value={aiInput}
+                    onChange={e => setAiInput(e.target.value)}
+                    placeholder={
+                      mode === 'review' ? 'Ask for a review…'
+                      : mode === 'brainstorm' ? 'Share your idea…'
+                      : 'Message the writing AI…'
+                    }
+                    disabled={aiLoading}
+                  />
+                  <button
+                    type="submit"
+                    className="ns-chat-send"
+                    disabled={aiLoading || !aiInput.trim()}
+                    style={{ opacity: aiLoading || !aiInput.trim() ? 0.4 : 1 }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_upward</span>
+                  </button>
+                </div>
+              </form>
+            </aside>
+          )}
+        </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </Layout>
   );
 }
