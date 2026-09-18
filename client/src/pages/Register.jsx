@@ -13,7 +13,7 @@ export default function Register() {
     e.preventDefault();
     clearError();
     const result = await register(name, email, password);
-    if (result.success) navigate('/');
+    if (result.success) navigate('/home');
   };
 
   return (

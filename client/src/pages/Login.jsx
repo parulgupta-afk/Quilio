@@ -12,7 +12,7 @@ export default function Login() {
     e.preventDefault();
     clearError();
     const result = await login(email, password);
-    if (result.success) navigate('/');
+    if (result.success) navigate('/home');
   };
 
   return (

@@ -67,7 +67,7 @@ export default function Profile() {
         <div className="page" style={{ color: '#fca5a5' }}>
           User not found
           <br />
-          <Link to="/" style={{ color: '#C9C9FF' }}>
+          <Link to="/home" style={{ color: '#C9C9FF' }}>
             ← Home
           </Link>
         </div>

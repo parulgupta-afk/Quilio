@@ -114,7 +114,7 @@ export default function PostDetail() {
       <Layout>
         <div className="page" style={{ textAlign: 'center', paddingTop: 80 }}>
           <p style={{ color: '#fca5a5', marginBottom: 16 }}>{error || 'Not found'}</p>
-          <Link to="/" style={{ color: '#C9C9FF' }}>
+          <Link to="/home" style={{ color: '#C9C9FF' }}>
             ← Back to feed
           </Link>
         </div>

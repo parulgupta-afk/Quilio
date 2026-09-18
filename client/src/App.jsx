@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
+import Welcome from './pages/Welcome';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import HomeFeed from './pages/HomeFeed';
@@ -17,20 +18,116 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+function PublicOnly({ children }) {
+  const { isAuthenticated } = useAuthStore();
+  return isAuthenticated ? <Navigate to="/home" replace /> : children;
+}
+
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomeFeed />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/post/:slug" element={<PostDetail />} />
-      <Route path="/profile/:id" element={<Profile />} />
-      <Route path="/search" element={<Search />} />
-      <Route path="/write" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/learn/:postId" element={<ProtectedRoute><LearnThis /></ProtectedRoute>} />
-      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-      <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+      {/* Public — no app access until auth */}
+      <Route
+        path="/"
+        element={
+          <PublicOnly>
+            <Welcome />
+          </PublicOnly>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <PublicOnly>
+            <Login />
+          </PublicOnly>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicOnly>
+            <Register />
+          </PublicOnly>
+        }
+      />
+
+      {/* App — login required */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <HomeFeed />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/post/:slug"
+        element={
+          <ProtectedRoute>
+            <PostDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:id"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <ProtectedRoute>
+            <Search />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/write"
+        element={
+          <ProtectedRoute>
+            <CreatePost />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learn/:postId"
+        element={
+          <ProtectedRoute>
+            <LearnThis />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/progress"
+        element={
+          <ProtectedRoute>
+            <Progress />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

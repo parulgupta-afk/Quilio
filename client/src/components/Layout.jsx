@@ -17,11 +17,11 @@ export default function Layout({ children }) {
   return (
     <div className="shell">
       <nav className="railnav">
-        <Link to="/" style={{ marginBottom: 8 }}>
+        <Link to="/home" style={{ marginBottom: 8 }}>
           <Logo />
         </Link>
 
-        <Link to="/" className={active('/')} title="Home">
+        <Link to="/home" className={active('/home')} title="Home">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M4 11.5 12 5l8 6.5" />
             <path d="M6 10v9h12v-9" />
@@ -58,18 +58,6 @@ export default function Layout({ children }) {
             >
               <div className="avatar">{user?.name?.charAt(0) || 'U'}</div>
             </Link>
-
-            <button
-              onClick={() => { logout(); navigate('/'); }}
-              title="Logout"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5A6076', padding: 0 }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="22" height="22">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-            </button>
           </>
         )}
 
@@ -82,7 +70,7 @@ export default function Layout({ children }) {
 
       <div className="main-area">
         <header className="mobile-header">
-          <Link to="/" className="brand">
+          <Link to="/home" className="brand">
             <Logo size={20} /> Quilio
           </Link>
           <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#8B93A7' }}>
