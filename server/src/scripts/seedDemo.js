@@ -314,18 +314,18 @@ const [count, setCount] = useState(0);
 Runs after the DOM has been painted. Use for network requests, subscriptions, timers — anything that syncs with the outside world.
 
 The dependency array controls when the effect re-runs:
-- `[]` → once on mount
-- `[a, b]` → when a or b changes
+- \`[]\` → once on mount
+- \`[a, b]\` → when a or b changes
 - no array → after every render (rare)
 
 ## useRef
-Holds a mutable value that does not trigger re-renders. Two main uses: accessing a DOM node (`ref.current = element`) and storing a value that persists across renders without causing them.
+Holds a mutable value that does not trigger re-renders. Two main uses: accessing a DOM node (\`ref.current = element\`) and storing a value that persists across renders without causing them.
 
 ## useCallback / useMemo
 Both memoize across renders. useCallback memoizes a function. useMemo memoizes a computed value. Don't add them pre-emptively — measure first.
 
 ## Custom hooks
-Extract stateful logic into reusable functions. The convention is `useFoo`. They can call other hooks. This is the cleanest abstraction pattern in React.`,
+Extract stateful logic into reusable functions. The convention is \`useFoo\`. They can call other hooks. This is the cleanest abstraction pattern in React.`,
     },
 
     {
@@ -352,7 +352,7 @@ A sidebar card and a hero card might both be 300 px wide, but one lives in a nar
 Now the card reflows based on its own container's width — regardless of where that container lives on the page.
 
 ## Container query units
-`cqw` = 1% of container width. `cqh` = 1% of container height. Useful for fluid typography inside components.
+\`cqw\` = 1% of container width. \`cqh\` = 1% of container height. Useful for fluid typography inside components.
 
 ## Browser support
 Baseline 2023. Full support in Chrome 105+, Firefox 110+, Safari 16+. No polyfill needed for modern web targets.
