@@ -35,10 +35,6 @@ export default function Welcome() {
   const labelRef = useRef(null);
   const animRef = useRef(null);
 
-  if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
-  }
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

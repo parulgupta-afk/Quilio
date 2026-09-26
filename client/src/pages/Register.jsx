@@ -27,7 +27,7 @@ export default function Register() {
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [localError, setLocalError] = useState('');
-  const { register, isLoading, error, clearError } = useAuthStore();
+  const { register, logout, user, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -70,6 +70,58 @@ export default function Register() {
           </h1>
           <p className="ns-auth-subtitle">Create your learning workspace</p>
         </div>
+
+        {isAuthenticated && (
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.12)',
+            border: '1px solid rgba(99, 102, 241, 0.3)',
+            borderRadius: '12px',
+            padding: '14px 16px',
+            marginBottom: '16px',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ fontSize: '13px', color: '#e2e2e9' }}>
+              Currently signed in as <strong style={{ color: '#c0c1ff' }}>{user?.name || user?.email}</strong>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/home')}
+                style={{
+                  background: '#6366F1',
+                  color: '#fff',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                Go to Feed →
+              </button>
+              <button
+                type="button"
+                onClick={() => logout()}
+                style={{
+                  background: 'rgba(255, 180, 171, 0.15)',
+                  color: '#ffb4ab',
+                  border: '1px solid rgba(255, 180, 171, 0.3)',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="ns-auth-card">
           <div className="ns-tab-bar" role="tablist">

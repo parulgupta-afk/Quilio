@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import Layout from '../components/Layout';
 
 export default function Profile() {
   const { id } = useParams();
-  const { user: me, isAuthenticated } = useAuthStore();
+  const { user: me, isAuthenticated, logout } = useAuthStore();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -121,9 +122,21 @@ export default function Profile() {
             </button>
           )}
           {isSelf && (
-            <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '9px 14px' }}>
-              Dashboard
-            </Link>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '9px 14px' }}>
+                Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                className="btn btn-ghost"
+                style={{ padding: '9px 14px', color: '#ffb4ab', borderColor: 'rgba(255, 180, 171, 0.3)' }}
+              >
+                Log Out
+              </button>
+            </div>
           )}
         </div>
 

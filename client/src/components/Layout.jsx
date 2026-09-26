@@ -72,18 +72,31 @@ export default function Layout({ children }) {
 
           {/* Avatar / auth */}
           {isAuthenticated ? (
-            <div
-              className="ns-avatar-ring"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/profile/${user?._id}`)}
-              title={user?.name}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div
-                className="ns-avatar"
-                style={{ width: 32, height: 32, fontSize: 13 }}
+                className="ns-avatar-ring"
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate(`/profile/${user?._id}`)}
+                title={`Profile: ${user?.name}`}
               >
-                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                <div
+                  className="ns-avatar"
+                  style={{ width: 32, height: 32, fontSize: 13 }}
+                >
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
               </div>
+              <button
+                className="ns-icon-btn"
+                title="Log Out"
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                style={{ color: '#ffb4ab' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
+              </button>
             </div>
           ) : (
             <Link

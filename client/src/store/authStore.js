@@ -72,6 +72,9 @@ const useAuthStore = create(
 
       // Logout
       logout: () => {
+        try {
+          localStorage.removeItem('quilio-auth');
+        } catch (e) {}
         set({
           user: null,
           token: null,

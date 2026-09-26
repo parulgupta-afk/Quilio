@@ -18,39 +18,14 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
-function PublicOnly({ children }) {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <Navigate to="/home" replace /> : children;
-}
-
 export default function App() {
   return (
     <Routes>
-      {/* Public — no app access until auth */}
-      <Route
-        path="/"
-        element={
-          <PublicOnly>
-            <Welcome />
-          </PublicOnly>
-        }
-      />
-      <Route
-        path="/login"
-        element={
-          <PublicOnly>
-            <Login />
-          </PublicOnly>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicOnly>
-            <Register />
-          </PublicOnly>
-        }
-      />
+      {/* Auth & Public */}
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/welcome" element={<Welcome />} />
 
       {/* App — login required */}
       <Route
