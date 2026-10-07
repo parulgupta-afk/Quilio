@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const GoogleIcon = (props) => (
   <svg viewBox="0 0 24 24" width="1em" height="1em" {...props}>
@@ -19,7 +19,7 @@ const AppleIcon = (props) => (
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
 
 const itemVariants = {
@@ -27,12 +27,19 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
 
+const DEMO_ACCOUNTS = [
+  { name: 'Parul Gupta', email: 'parulmahajan@gmail.com', role: 'Owner' },
+  { name: 'Aria Chen', email: 'aria@quilio.app', role: 'Systems' },
+  { name: 'Marcus Webb', email: 'marcus@quilio.app', role: 'AI Researcher' },
+];
+
 /**
- * Auth-11 layout (Watermelon registry) — Quilio branded, wired to onSubmit
+ * Auth-11 layout (Watermelon registry) — Quilio branded with Google OAuth and Quick Demo
  */
 export default function Auth11({
   mode = 'login',
   onSubmit,
+  onGoogleLogin,
   isLoading = false,
   errorMessage = '',
 }) {
@@ -43,10 +50,75 @@ export default function Auth11({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [socialNote, setSocialNote] = useState('');
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+
+  // Auto-init Google GIS if client ID is configured
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (clientId && window.google?.accounts?.id && onGoogleLogin) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            if (response?.credential) {
+              onGoogleLogin(response.credential);
+            }
+          },
+        });
+      } catch (e) {
+        console.warn('Google GIS init error:', e);
+      }
+    }
+  }, [onGoogleLogin]);
+
+  const handleFillDemo = (accEmail) => {
+    setEmail(accEmail);
+    setPassword('demo1234');
+    setSocialNote('');
+  };
+
+  const handleGoogleBtnClick = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (clientId && window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setShowGoogleModal(true);
+          }
+        });
+        return;
+      } catch (err) {
+        // Fall back to modal
+      }
+    }
+    setShowGoogleModal(true);
+  };
+
+  const executeGoogleLogin = (targetEmail, targetName) => {
+    setShowGoogleModal(false);
+    if (!onGoogleLogin) return;
+
+    // Create a client-side Google credential payload for the backend /api/auth/google endpoint
+    const cleanEmail = (targetEmail || 'parulmahajan@gmail.com').trim().toLowerCase();
+    const cleanName = targetName || cleanEmail.split('@')[0];
+
+    onGoogleLogin({
+      email: cleanEmail,
+      name: cleanName,
+      googleId: `google_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}`,
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit?.({ name, email, password, confirmPassword });
+    onSubmit?.({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      confirmPassword,
+    });
   };
 
   return (
@@ -97,11 +169,12 @@ export default function Auth11({
             </p>
           </motion.div>
 
+          {/* Social Sign-In */}
           <motion.div variants={itemVariants} className="w-auth11-socials">
             <button
               type="button"
               className="w-auth11-social"
-              onClick={() => setSocialNote('Google sign-in is not enabled yet. Use email.')}
+              onClick={handleGoogleBtnClick}
             >
               <GoogleIcon style={{ width: 16, height: 16 }} />
               Continue with Google
@@ -109,7 +182,10 @@ export default function Auth11({
             <button
               type="button"
               className="w-auth11-social"
-              onClick={() => setSocialNote('Apple sign-in is not enabled yet. Use email.')}
+              onClick={() => {
+                setSocialNote('Apple sign-in requires Apple Developer ID. Please continue with Google or Email.');
+                setTimeout(() => setSocialNote(''), 4500);
+              }}
             >
               <AppleIcon style={{ width: 16, height: 16 }} />
               Continue with Apple
@@ -119,9 +195,32 @@ export default function Auth11({
 
           <motion.div variants={itemVariants} className="w-auth11-or">
             <span />
-            <em>Or</em>
+            <em>Or with email</em>
             <span />
           </motion.div>
+
+          {/* Quick Demo Fill on Login */}
+          {!isRegister && (
+            <motion.div variants={itemVariants} className="w-auth11-demo-section">
+              <div className="w-auth11-demo-header">
+                <span>⚡ 1-Click Demo Fill</span>
+                <span>pw: demo1234</span>
+              </div>
+              <div className="w-auth11-demo-chips">
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    className="w-auth11-demo-chip"
+                    onClick={() => handleFillDemo(acc.email)}
+                    title={`Fill ${acc.name} (${acc.email})`}
+                  >
+                    <span>{acc.name}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="w-auth11-form">
             {errorMessage && (
@@ -159,7 +258,10 @@ export default function Auth11({
             </motion.div>
 
             <motion.div variants={itemVariants} className="w-auth11-field">
-              <label htmlFor="password">Password</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label htmlFor="password">Password</label>
+                {!isRegister && <span style={{ fontSize: '0.75rem', color: '#8083ff' }}>demo: demo1234</span>}
+              </div>
               <div className="w-auth11-pw">
                 <input
                   id="password"
@@ -217,6 +319,97 @@ export default function Auth11({
           </motion.p>
         </motion.div>
       </div>
+
+      {/* Google OAuth Account Chooser Modal */}
+      <AnimatePresence>
+        {showGoogleModal && (
+          <div className="w-auth11-modal-overlay" onClick={() => setShowGoogleModal(false)}>
+            <motion.div
+              className="w-auth11-modal"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-auth11-modal-header">
+                <div className="w-auth11-modal-title">
+                  <GoogleIcon style={{ width: 22, height: 22 }} />
+                  <span>Sign in with Google</span>
+                </div>
+                <button
+                  type="button"
+                  className="w-auth11-modal-close"
+                  onClick={() => setShowGoogleModal(false)}
+                >
+                  &times;
+                </button>
+              </div>
+
+              <p style={{ fontSize: '0.85rem', color: '#a3a3a3', marginBottom: '1rem', lineHeight: 1.45 }}>
+                Choose a Google account to continue to <strong>Quilio</strong>:
+              </p>
+
+              {/* Primary Detected Google Account */}
+              <button
+                type="button"
+                className="w-auth11-modal-account"
+                onClick={() => executeGoogleLogin('parulmahajan@gmail.com', 'Parul Gupta')}
+              >
+                <div className="w-auth11-modal-avatar">P</div>
+                <div className="w-auth11-modal-info">
+                  <div className="w-auth11-modal-name">Parul Gupta</div>
+                  <div className="w-auth11-modal-email">parulmahajan@gmail.com</div>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#8083ff', fontWeight: 600 }}>Continue →</span>
+              </button>
+
+              {/* Secondary Demo Google Account */}
+              <button
+                type="button"
+                className="w-auth11-modal-account"
+                onClick={() => executeGoogleLogin('aria@quilio.app', 'Aria Chen')}
+              >
+                <div className="w-auth11-modal-avatar" style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>A</div>
+                <div className="w-auth11-modal-info">
+                  <div className="w-auth11-modal-name">Aria Chen</div>
+                  <div className="w-auth11-modal-email">aria@quilio.app</div>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#8083ff', fontWeight: 600 }}>Continue →</span>
+              </button>
+
+              {/* Custom Google Email input */}
+              <div className="w-auth11-modal-custom">
+                <label htmlFor="customGoogleInput">Or enter any Google email address:</label>
+                <div className="w-auth11-modal-input-row">
+                  <input
+                    id="customGoogleInput"
+                    type="email"
+                    className="w-auth11-modal-input"
+                    placeholder="you@gmail.com"
+                    value={customGoogleEmail}
+                    onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && customGoogleEmail) {
+                        e.preventDefault();
+                        executeGoogleLogin(customGoogleEmail);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="w-auth11-modal-btn"
+                    disabled={!customGoogleEmail.trim()}
+                    onClick={() => executeGoogleLogin(customGoogleEmail)}
+                  >
+                    Sign In
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

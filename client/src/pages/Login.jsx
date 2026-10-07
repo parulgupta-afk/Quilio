@@ -4,7 +4,7 @@ import useAuthStore from '../store/authStore';
 import Auth11 from '../components/auth/Auth11';
 
 export default function Login() {
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, googleLogin, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const [localError, setLocalError] = useState('');
 
@@ -19,10 +19,20 @@ export default function Login() {
     if (result?.success) navigate('/home');
   };
 
+  const handleGoogleLogin = async (credentialOrPayload) => {
+    setLocalError('');
+    clearError?.();
+    const result = await googleLogin(credentialOrPayload);
+    if (result?.success) {
+      navigate('/home');
+    }
+  };
+
   return (
     <Auth11
       mode="login"
       onSubmit={handleSubmit}
+      onGoogleLogin={handleGoogleLogin}
       isLoading={isLoading}
       errorMessage={localError || error || ''}
     />

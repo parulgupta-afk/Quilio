@@ -20,6 +20,8 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'Please provide all fields' });
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+
     if (password.length < 6) {
       return res
         .status(400)
@@ -27,15 +29,15 @@ const register = async (req, res) => {
     }
 
     // Check if user already exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create user
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: cleanEmail,
       passwordHash: password, // will be hashed by pre-save hook
     });
 
@@ -70,17 +72,25 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Find user and explicitly include passwordHash
-    const user = await User.findOne({ email }).select('+passwordHash');
+    const cleanEmail = email.toLowerCase().trim();
 
-    if (!user || !user.passwordHash) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    // Find user and explicitly include passwordHash
+    const user = await User.findOne({ email: cleanEmail }).select('+passwordHash');
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials. If this is a demo account, use password demo1234.' });
+    }
+
+    if (!user.passwordHash) {
+      return res.status(400).json({
+        message: 'This account was registered with Google. Please use "Continue with Google" to sign in.',
+      });
     }
 
     // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid credentials. Note: demo accounts use password "demo1234".' });
     }
 
     const token = generateToken(user._id);
