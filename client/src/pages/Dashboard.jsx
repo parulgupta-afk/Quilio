@@ -3,56 +3,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 
-const NAV = [
-  { label: 'Overview', to: '/dashboard', key: 'overview' },
-  { label: 'Home feed', to: '/home', key: 'home' },
-  { label: 'Write', to: '/write', key: 'write' },
-  { label: 'Progress', to: '/progress', key: 'progress' },
-  { label: 'Search', to: '/search', key: 'search' },
-];
-
-function StatCard({ label, value, hint }) {
-  return (
-    <div className="qd-stat">
-      <div className="qd-stat-label">{label}</div>
-      <div className="qd-stat-value">{value}</div>
-      {hint && <div className="qd-stat-hint">{hint}</div>}
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
-  const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      setLoading(true);
-      try {
-        const [postsRes, progressRes] = await Promise.allSettled([
-          api.get('/posts/me/all'),
-          api.get('/learn/progress'),
-        ]);
-        if (!alive) return;
-        if (postsRes.status === 'fulfilled') {
-          const data = postsRes.value.data;
-          setPosts(Array.isArray(data) ? data : data?.posts || []);
-        }
-        if (progressRes.status === 'fulfilled') {
-          const data = progressRes.value.data;
-          setProgress(Array.isArray(data) ? data : data?.attempts || data?.items || []);
-        }
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
+    let ok = true;
+    api
+      .get('/posts/me/all')
+      .then((r) => {
+        if (!ok) return;
+        const data = r.data;
+        setPosts(Array.isArray(data) ? data : data?.posts || []);
+      })
+      .catch(() => ok && setPosts([]))
+      .finally(() => ok && setLoading(false));
     return () => {
-      alive = false;
+      ok = false;
     };
   }, []);
 
@@ -61,210 +31,162 @@ export default function Dashboard() {
     const drafts = posts.filter((p) => p.status === 'draft').length;
     const views = posts.reduce((n, p) => n + (p.viewsCount || 0), 0);
     const likes = posts.reduce((n, p) => n + (p.likesCount || 0), 0);
-    return { published, drafts, views, likes, quizzes: progress.length };
-  }, [posts, progress]);
-
-  const recent = posts.slice(0, 8);
+    return { published, drafts, views, likes };
+  }, [posts]);
 
   return (
-    <div className="qd-root">
-      {/* Mobile top */}
-      <header className="qd-mobile-bar">
-        <button type="button" className="qd-icon-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
-          ☰
-        </button>
-        <span className="qd-mobile-title">Dashboard</span>
-        <Link to="/write" className="qd-icon-btn" title="Write">
-          ✎
-        </Link>
-      </header>
+    <div className="ag-root">
+      <aside className={`ag-sidebar ${menuOpen ? 'open' : ''}`}>
+        <div className="ag-brand">
+          <div className="ag-mark">Q</div>
+          <div>
+            <div className="ag-brand-name">Quilio</div>
+            <div className="ag-brand-sub">Dashboard</div>
+          </div>
+        </div>
 
-      <div className="qd-shell">
-        {/* Sidebar */}
-        <aside className={`qd-sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <div className="qd-sidebar-head">
-            <div className="qd-logo-mark">Q</div>
+        <nav className="ag-nav">
+          <div className="ag-nav-group">General</div>
+          <Link to="/dashboard" className="ag-nav-link active" onClick={() => setMenuOpen(false)}>
+            Dashboard
+          </Link>
+          <Link to="/home" className="ag-nav-link" onClick={() => setMenuOpen(false)}>
+            Home feed
+          </Link>
+          <Link to="/write" className="ag-nav-link" onClick={() => setMenuOpen(false)}>
+            Write
+          </Link>
+          <div className="ag-nav-group">Learning</div>
+          <Link to="/progress" className="ag-nav-link" onClick={() => setMenuOpen(false)}>
+            Progress
+          </Link>
+          <Link to="/search" className="ag-nav-link" onClick={() => setMenuOpen(false)}>
+            Search
+          </Link>
+          <div className="ag-nav-group">Account</div>
+          <Link
+            to={user?._id ? `/profile/${user._id}` : '/home'}
+            className="ag-nav-link"
+            onClick={() => setMenuOpen(false)}
+          >
+            Profile
+          </Link>
+          <Link to="/notifications" className="ag-nav-link" onClick={() => setMenuOpen(false)}>
+            Notifications
+          </Link>
+        </nav>
+
+        <div className="ag-side-foot">
+          <div className="ag-user">
+            <div className="ag-avatar">{user?.name?.[0] || 'U'}</div>
             <div>
-              <div className="qd-logo-text">Quilio</div>
-              <div className="qd-logo-sub">Scholar workspace</div>
+              <div className="ag-user-name">{user?.name || 'Scholar'}</div>
+              <div className="ag-user-email">{user?.email || ''}</div>
             </div>
-            <button
-              type="button"
-              className="qd-icon-btn qd-sidebar-close"
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Close menu"
-            >
-              ✕
-            </button>
+          </div>
+          <button
+            type="button"
+            className="ag-logout"
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+          >
+            Log out
+          </button>
+        </div>
+      </aside>
+
+      {menuOpen && <button type="button" className="ag-backdrop" onClick={() => setMenuOpen(false)} aria-label="Close" />}
+
+      <div className="ag-main">
+        <header className="ag-topbar">
+          <button type="button" className="ag-menu-btn" onClick={() => setMenuOpen(true)}>
+            ☰
+          </button>
+          <div className="ag-topbar-title">
+            <h1>Dashboard</h1>
+            <p>Manage your posts and workspace</p>
+          </div>
+          <Link to="/write" className="ag-btn-primary">
+            + New post
+          </Link>
+        </header>
+
+        <div className="ag-body">
+          <div className="ag-meta-row">
+            <div className="ag-chip strong">{user?.name || 'Workspace'}</div>
+            <div className="ag-chip">Scholar plan</div>
+            <div className="ag-chip">
+              {stats.published}/{stats.published + stats.drafts} published
+            </div>
           </div>
 
-          <nav className="qd-nav">
-            <div className="qd-nav-label">General</div>
-            {NAV.map((item) => (
-              <Link
-                key={item.key}
-                to={item.to}
-                className={`qd-nav-item ${item.key === 'overview' ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="qd-nav-label">Account</div>
-            <Link
-              to={user?._id ? `/profile/${user._id}` : '/home'}
-              className="qd-nav-item"
-              onClick={() => setSidebarOpen(false)}
-            >
-              Profile
+          <div className="ag-stats">
+            <div className="ag-stat">
+              <span>Published</span>
+              <strong>{loading ? '—' : stats.published}</strong>
+            </div>
+            <div className="ag-stat">
+              <span>Drafts</span>
+              <strong>{loading ? '—' : stats.drafts}</strong>
+            </div>
+            <div className="ag-stat">
+              <span>Views</span>
+              <strong>{loading ? '—' : stats.views}</strong>
+            </div>
+            <div className="ag-stat">
+              <span>Likes</span>
+              <strong>{loading ? '—' : stats.likes}</strong>
+            </div>
+          </div>
+
+          <div className="ag-section-head">
+            <div className="ag-section-title">
+              <h2>Your posts</h2>
+              <span className="ag-badge">{posts.length} total</span>
+            </div>
+            <Link to="/write" className="ag-btn-ghost">
+              Create post
             </Link>
-            <Link to="/notifications" className="qd-nav-item" onClick={() => setSidebarOpen(false)}>
-              Notifications
-            </Link>
-          </nav>
-
-          <div className="qd-sidebar-foot">
-            <div className="qd-user">
-              <div className="qd-avatar">{user?.name?.charAt(0) || 'U'}</div>
-              <div className="qd-user-meta">
-                <div className="qd-user-name">{user?.name || 'Scholar'}</div>
-                <div className="qd-user-email">{user?.email || ''}</div>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="qd-logout"
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-            >
-              Log out
-            </button>
-          </div>
-        </aside>
-
-        {sidebarOpen && (
-          <button type="button" className="qd-backdrop" aria-label="Close" onClick={() => setSidebarOpen(false)} />
-        )}
-
-        {/* Main */}
-        <main className="qd-main">
-          <div className="qd-topbar">
-            <div>
-              <h1>Dashboard</h1>
-              <p>Manage your writing, learning, and activity</p>
-            </div>
-            <div className="qd-topbar-actions">
-              <Link to="/home" className="qd-btn qd-btn-ghost">
-                Feed
-              </Link>
-              <Link to="/write" className="qd-btn qd-btn-primary">
-                + New post
-              </Link>
-            </div>
           </div>
 
-          <div className="qd-content">
-            {/* Meta chips */}
-            <div className="qd-chips">
-              <span className="qd-chip strong">{user?.name || 'Scholar'}</span>
-              <span className="qd-chip">Workspace</span>
-              <span className="qd-chip">
-                {stats.published} published · {stats.drafts} drafts
-              </span>
-            </div>
-
-            {/* Stats */}
-            <div className="qd-stats">
-              <StatCard label="Published" value={loading ? '—' : stats.published} hint="Live on the feed" />
-              <StatCard label="Drafts" value={loading ? '—' : stats.drafts} hint="Not published yet" />
-              <StatCard label="Views" value={loading ? '—' : stats.views} hint="Across your posts" />
-              <StatCard label="Quiz attempts" value={loading ? '—' : stats.quizzes} hint="Learn This progress" />
-            </div>
-
-            {/* Quick actions */}
-            <section className="qd-section">
-              <div className="qd-section-head">
-                <h2>Quick actions</h2>
-              </div>
-              <div className="qd-actions">
-                <Link to="/write" className="qd-action">
-                  <span className="qd-action-title">Write with AI</span>
-                  <span className="qd-action-desc">Draft, expand, and publish a synthesis</span>
-                </Link>
-                <Link to="/search" className="qd-action">
-                  <span className="qd-action-title">Explore & learn</span>
-                  <span className="qd-action-desc">Find posts and open Learn This</span>
-                </Link>
-                <Link to="/progress" className="qd-action">
-                  <span className="qd-action-title">View progress</span>
-                  <span className="qd-action-desc">Quiz history and retention</span>
+          <div className="ag-list">
+            {loading && <p className="ag-muted">Loading…</p>}
+            {!loading && posts.length === 0 && (
+              <div className="ag-empty">
+                <p>No posts yet.</p>
+                <Link to="/write" className="ag-btn-primary">
+                  Write your first post
                 </Link>
               </div>
-            </section>
-
-            {/* Posts table */}
-            <section className="qd-section">
-              <div className="qd-section-head">
-                <h2>Your posts</h2>
-                <Link to="/write" className="qd-link">
-                  Create new
-                </Link>
-              </div>
-
-              <div className="qd-table-wrap">
-                {loading && <p className="qd-muted">Loading…</p>}
-                {!loading && recent.length === 0 && (
-                  <div className="qd-empty">
-                    <p>No posts yet.</p>
-                    <Link to="/write" className="qd-btn qd-btn-primary">
-                      Write your first post
-                    </Link>
+            )}
+            {posts.map((p) => (
+              <div key={p._id} className="ag-card">
+                <div className="ag-card-icon">📄</div>
+                <div className="ag-card-body">
+                  <p className="ag-card-title">{p.title}</p>
+                  <div className="ag-card-meta">
+                    <span>{p.status}</span>
+                    <span>·</span>
+                    <span>{p.viewsCount || 0} views</span>
+                    <span>·</span>
+                    <span>
+                      {p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : '—'}
+                    </span>
                   </div>
-                )}
-                {!loading && recent.length > 0 && (
-                  <table className="qd-table">
-                    <thead>
-                      <tr>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Views</th>
-                        <th>Updated</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recent.map((p) => (
-                        <tr key={p._id}>
-                          <td className="qd-title-cell">{p.title}</td>
-                          <td>
-                            <span className={`qd-badge ${p.status === 'published' ? 'ok' : 'draft'}`}>
-                              {p.status || 'draft'}
-                            </span>
-                          </td>
-                          <td>{p.viewsCount || 0}</td>
-                          <td className="qd-muted">
-                            {p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : '—'}
-                          </td>
-                          <td>
-                            {p.status === 'published' && p.slug ? (
-                              <Link to={`/post/${p.slug}`} className="qd-link">
-                                View
-                              </Link>
-                            ) : (
-                              <span className="qd-muted">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                </div>
+                {p.status === 'published' && p.slug ? (
+                  <Link to={`/post/${p.slug}`} className="ag-card-action">
+                    Open
+                  </Link>
+                ) : (
+                  <span className="ag-muted">Draft</span>
                 )}
               </div>
-            </section>
+            ))}
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
