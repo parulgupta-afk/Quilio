@@ -1416,3 +1416,381 @@ html.light .ns-input {
 
 /* tab link fix */
 a.ns-tab-btn { text-decoration: none; color: inherit; }
+
+/* ═══════════════════════════════════════════════════════════
+   Auth-11 professional shell (Quilio)
+   ═══════════════════════════════════════════════════════════ */
+.auth11-root {
+  min-height: 100vh;
+  background: #050505;
+  color: #f5f5f5;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.auth11-grid {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 960px) {
+  .auth11-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.auth11-form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 3rem;
+  max-width: 460px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 960px) {
+  .auth11-form-panel {
+    padding: 3rem 3.5rem;
+    max-width: 520px;
+    margin: 0 0 0 auto;
+  }
+}
+
+.auth11-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.auth11-brand-name {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.auth11-brand-tag {
+  font-size: 0.7rem;
+  color: #a3a3a3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.auth11-headline h1 {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: clamp(1.75rem, 4vw, 2.15rem);
+  font-weight: 500;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+}
+
+.auth11-headline p {
+  margin: 0 0 1.75rem;
+  color: #a3a3a3;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.auth11-social {
+  margin-bottom: 1.25rem;
+}
+
+.auth11-social-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #141414;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.auth11-social-btn:hover {
+  background: #1f1f1f;
+}
+
+.auth11-social-btn:active {
+  transform: scale(0.98);
+}
+
+.auth11-social-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.auth11-social-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: #a3a3a3;
+  text-align: center;
+}
+
+.auth11-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth11-divider span {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.auth11-divider em {
+  font-style: normal;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #737373;
+}
+
+.auth11-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.auth11-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auth11-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e5e5e5;
+}
+
+.auth11-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth11-muted-link {
+  font-size: 0.75rem;
+  color: #737373;
+}
+
+.auth11-field input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0a0a0a;
+  padding: 0.9rem 1rem;
+  font-size: 0.9rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.auth11-field input::placeholder {
+  color: #737373;
+}
+
+.auth11-field input:focus {
+  border-color: #8083ff;
+  background: #111;
+  box-shadow: 0 0 0 3px rgba(128, 131, 255, 0.18);
+}
+
+.auth11-input-wrap {
+  position: relative;
+}
+
+.auth11-input-wrap input {
+  padding-right: 4rem;
+}
+
+.auth11-show {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #a3a3a3;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth11-show:hover {
+  color: #fff;
+}
+
+.auth11-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #fca5a5;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.auth11-submit {
+  width: 100%;
+  margin-top: 0.25rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #8083ff 0%, #6f00be 100%);
+  box-shadow: 0 0 28px rgba(128, 131, 255, 0.28);
+  transition: filter 0.15s, transform 0.1s, opacity 0.15s;
+}
+
+.auth11-submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.auth11-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth11-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.auth11-switch {
+  margin: 1.5rem 0 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #a3a3a3;
+}
+
+.auth11-switch a {
+  color: #c0c1ff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth11-switch a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth11-legal {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #525252;
+  line-height: 1.45;
+}
+
+/* Hero */
+.auth11-hero {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 30%, rgba(128, 131, 255, 0.22), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 30% 80%, rgba(111, 0, 190, 0.25), transparent 50%),
+    linear-gradient(160deg, #0c0e13 0%, #111318 45%, #1a1028 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (min-width: 960px) {
+  .auth11-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+  }
+}
+
+.auth11-hero-glow {
+  position: absolute;
+  inset: 20% 15%;
+  background: radial-gradient(circle, rgba(192, 193, 255, 0.12), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.auth11-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+}
+
+.auth11-hero-pill {
+  display: inline-flex;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(192, 193, 255, 0.35);
+  background: rgba(128, 131, 255, 0.12);
+  color: #c0c1ff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+.auth11-hero-content h2 {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 2.35rem;
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 0 0 1.5rem;
+  letter-spacing: -0.02em;
+  color: #f4f4f5;
+}
+
+.auth11-hero-content h2 span {
+  color: #c0c1ff;
+}
+
+.auth11-hero-content ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth11-hero-content li {
+  font-size: 0.9rem;
+  color: #c7c4d7;
+  padding-left: 1.25rem;
+  position: relative;
+  line-height: 1.45;
+}
+
+.auth11-hero-content li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8083ff, #6f00be);
+}
+
+.auth11-hero-footer {
+  margin-top: 2.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #525252;
+}
