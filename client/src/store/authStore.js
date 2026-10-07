@@ -70,6 +70,39 @@ const useAuthStore = create(
         }
       },
 
+      // Google Login
+      googleLogin: async (credentialOrPayload) => {
+        set({ isLoading: true, error: null });
+        try {
+          const body =
+            typeof credentialOrPayload === 'string'
+              ? { credential: credentialOrPayload }
+              : credentialOrPayload;
+
+          const { data } = await api.post('/auth/google', body);
+
+          set({
+            user: {
+              _id: data._id,
+              name: data.name,
+              email: data.email,
+              avatarUrl: data.avatarUrl,
+              bio: data.bio,
+            },
+            token: data.token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+
+          return { success: true, user: data };
+        } catch (error) {
+          const message =
+            error.response?.data?.message || 'Google authentication failed';
+          set({ error: message, isLoading: false });
+          return { success: false, message };
+        }
+      },
+
       // Logout
       logout: () => {
         try {

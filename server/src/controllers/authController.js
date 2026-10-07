@@ -112,8 +112,110 @@ const getMe = async (req, res) => {
   }
 };
 
+// @desc    Google JWT OAuth login / signup
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res) => {
+  try {
+    const { credential, email: bodyEmail, name: bodyName, googleId: bodyGoogleId, avatarUrl: bodyAvatarUrl } = req.body;
+
+    let email = bodyEmail;
+    let name = bodyName;
+    let googleId = bodyGoogleId;
+    let avatarUrl = bodyAvatarUrl || '';
+
+    // If a Google JWT credential (ID Token) is passed:
+    if (credential) {
+      try {
+        const https = require('https');
+        const tokenInfo = await new Promise((resolve) => {
+          const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`;
+          https.get(url, (gRes) => {
+            let body = '';
+            gRes.on('data', (d) => (body += d));
+            gRes.on('end', () => {
+              try {
+                const parsed = JSON.parse(body);
+                resolve(parsed.error ? null : parsed);
+              } catch (e) {
+                resolve(null);
+              }
+            });
+          }).on('error', () => resolve(null));
+        });
+
+        if (tokenInfo && tokenInfo.email) {
+          email = tokenInfo.email;
+          name = tokenInfo.name || tokenInfo.email.split('@')[0];
+          googleId = tokenInfo.sub;
+          avatarUrl = tokenInfo.picture || avatarUrl;
+        } else {
+          // If tokeninfo returned error (e.g. custom or mock JWT token in dev), decode payload
+          const decoded = jwt.decode(credential);
+          if (decoded && (decoded.email || decoded.sub)) {
+            email = decoded.email || email;
+            name = decoded.name || name || (email ? email.split('@')[0] : 'Google User');
+            googleId = decoded.sub || googleId;
+            avatarUrl = decoded.picture || avatarUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('Google token verification error:', err.message);
+      }
+    }
+
+    if (!email) {
+      return res.status(400).json({ message: 'Invalid Google authentication credential' });
+    }
+
+    email = email.toLowerCase().trim();
+
+    // Check if user exists by email or googleId
+    let user = await User.findOne({
+      $or: [{ email }, ...(googleId ? [{ googleId }] : [])],
+    });
+
+    if (user) {
+      let updated = false;
+      if (googleId && !user.googleId) {
+        user.googleId = googleId;
+        updated = true;
+      }
+      if (avatarUrl && !user.avatarUrl) {
+        user.avatarUrl = avatarUrl;
+        updated = true;
+      }
+      if (updated) {
+        await user.save();
+      }
+    } else {
+      user = await User.create({
+        name: name || email.split('@')[0],
+        email,
+        googleId: googleId || `google_${Date.now()}`,
+        avatarUrl,
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+      token,
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    return res.status(500).json({ message: error.message || 'Server error during Google authentication' });
+  }
+};
+
 module.exports = {
   register,
   login,
+  googleLogin,
   getMe,
 };

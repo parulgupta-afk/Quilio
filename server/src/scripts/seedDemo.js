@@ -31,7 +31,7 @@ async function run() {
   for (const a of AUTHORS) {
     let u = await User.findOne({ email: a.email });
     if (!u) {
-      u = await User.create({ name: a.name, email: a.email, password: hash, bio: a.bio });
+      u = await User.create({ name: a.name, email: a.email, passwordHash: 'demo1234', bio: a.bio });
       console.log(`Created author: ${a.email} / demo1234`);
     }
     users.push(u);

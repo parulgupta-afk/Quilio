@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import AuthShell from '../components/auth/AuthShell';
+import Auth11 from '../components/watermelon-ui/auth-11';
 
 export default function Register() {
-  const { register, isLoading, error, clearError } = useAuthStore();
+  const { register, googleLogin, logout, user, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const [localError, setLocalError] = useState('');
 
@@ -30,15 +30,41 @@ export default function Register() {
     }
 
     const result = await register(name.trim(), email.trim(), password);
-    if (result?.success) navigate('/home');
+    if (result?.success) {
+      navigate('/home');
+    }
+  };
+
+  const handleGoogleLogin = async (credentialOrPayload) => {
+    setLocalError('');
+    clearError?.();
+    const result = await googleLogin(credentialOrPayload);
+    if (result?.success) {
+      navigate('/home');
+    }
   };
 
   return (
-    <AuthShell
-      mode="register"
-      onSubmit={handleSubmit}
-      isLoading={isLoading}
-      errorMessage={localError || error || ''}
-    />
+    <div className="relative min-h-screen bg-[#050505]">
+      {/* Watermelon Auth-11 Authentication Component */}
+      <Auth11
+        mode="register"
+        onSwitchMode={() => {
+          clearError?.();
+          navigate('/login');
+        }}
+        onSubmit={handleSubmit}
+        onGoogleLogin={handleGoogleLogin}
+        isLoading={isLoading}
+        errorMessage={localError || error}
+        brandTitle="Move fast. Feel Free"
+        heroImage="https://assets.watermelon.sh/auth-11.avif"
+        activeDot={1}
+        sessionUser={user}
+        isAuthenticated={isAuthenticated}
+        onLogout={() => logout()}
+        onNavigateFeed={() => navigate('/home')}
+      />
+    </div>
   );
 }
