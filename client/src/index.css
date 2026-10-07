@@ -2828,3 +2828,53 @@ a.ns-tab-btn { text-decoration: none; color: inherit; }
 .ag-muted { color: #737373; font-size: 0.85rem; }
 .ag-empty { text-align: center; padding: 2.5rem 1rem; }
 .ag-empty p { color: #737373; margin: 0 0 1rem; }
+
+/* Home feed inside shared workspace shell */
+.ag-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.home-feed-tabs .ag-chip {
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #141414;
+  color: #a3a3a3;
+  font: inherit;
+}
+.home-feed-tabs .ag-chip.strong {
+  color: #fff;
+  font-weight: 600;
+  border-color: rgba(255,255,255,0.18);
+  background: #1a1a1a;
+}
+.home-feed-card {
+  cursor: pointer;
+}
+.home-feed-avatar {
+  background: linear-gradient(135deg, #8083ff, #6f00be) !important;
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none !important;
+}
+.home-feed-author {
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+  color: #a3a3a3;
+}
+.home-feed-author strong {
+  color: #e8e8ed;
+  font-weight: 600;
+}
+.home-feed-excerpt {
+  margin: 0.25rem 0 0.4rem;
+  font-size: 0.85rem;
+  color: #8b8b9a;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
