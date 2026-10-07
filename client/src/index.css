@@ -1413,3 +1413,6 @@ html.light .ns-input {
   background: #f4f5f9;
   color: #141722;
 }
+
+/* tab link fix */
+a.ns-tab-btn { text-decoration: none; color: inherit; }
