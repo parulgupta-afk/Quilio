@@ -178,16 +178,7 @@ export default function Auth11({
               </button>
             )}
 
-            {onDemoLogin && !isRegister && (
-              <button
-                type="button"
-                className="w-auth11-social w-auth11-demo"
-                onClick={() => onDemoLogin()}
-                disabled={isLoading}
-              >
-                1-click Demo login (aria@quilio.app)
-              </button>
-            )}
+            
 
             {socialNote && <p className="w-auth11-note">{socialNote}</p>}
           </motion.div>
@@ -285,13 +276,7 @@ export default function Auth11({
             )}
           </p>
 
-          {!isRegister && (
-            <p className="w-auth11-hint">
-              Demo: <code>aria@quilio.app</code> / <code>demo1234</code>
-              <br />
-              Run <code>npm run seed</code> in server if demo login fails.
-            </p>
-          )}
+            
         </motion.div>
       </div>
     </div>
