@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserAvatar from './UserAvatar';
+import { AVATAR_OPTIONS } from '../constants/avatars';
 import api from '../services/api';
 
-/**
- * Watermelon Edit-Profile inspired modal — Quilio dark theme.
- * Saves via PUT /api/users/me (existing API).
- */
+const MAX_BYTES = 5 * 1024 * 1024;
+const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 export default function EditProfileModal({
   open,
   onClose,
@@ -17,23 +17,66 @@ export default function EditProfileModal({
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [uploadFile, setUploadFile] = useState(null);
+  const [previewUpload, setPreviewUpload] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!open || !initial) return;
     setName(initial.name || '');
     setBio(initial.bio || '');
     setAvatarUrl(initial.avatarUrl || '');
+    setUploadFile(null);
+    setPreviewUpload('');
     setError('');
   }, [open, initial]);
 
-  // Sync if parent updates avatar while modal open (from AvatarPicker)
   useEffect(() => {
     if (open && initial?.avatarUrl !== undefined) {
       setAvatarUrl(initial.avatarUrl || '');
     }
   }, [initial?.avatarUrl, open]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUpload) URL.revokeObjectURL(previewUpload);
+    };
+  }, [previewUpload]);
+
+  const handlePickFile = (e) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!ALLOWED.includes(f.type)) {
+      setError('Use JPEG, PNG, WebP, or GIF format.');
+      return;
+    }
+    if (f.size > MAX_BYTES) {
+      setError('Image must be under 5MB.');
+      return;
+    }
+    setError('');
+    if (previewUpload) URL.revokeObjectURL(previewUpload);
+    const url = URL.createObjectURL(f);
+    setPreviewUpload(url);
+    setUploadFile(f);
+  };
+
+  const handleDropdownAvatarChange = (val) => {
+    setError('');
+    if (val === '__custom__') {
+      fileInputRef.current?.click();
+      return;
+    }
+    if (uploadFile) {
+      setUploadFile(null);
+      if (previewUpload) URL.revokeObjectURL(previewUpload);
+      setPreviewUpload('');
+    }
+    setAvatarUrl(val === '__initials__' ? '' : val);
+  };
 
   const handleSave = async () => {
     if (!name.trim() || name.trim().length < 2) {
@@ -43,10 +86,22 @@ export default function EditProfileModal({
     setSaving(true);
     setError('');
     try {
+      let finalAvatarUrl = avatarUrl;
+
+      if (uploadFile) {
+        const form = new FormData();
+        form.append('image', uploadFile);
+        const { data: uploadRes } = await api.post('/upload', form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        if (!uploadRes?.url) throw new Error('Upload returned no URL');
+        finalAvatarUrl = uploadRes.url;
+      }
+
       const { data } = await api.put('/users/me', {
         name: name.trim(),
         bio: bio.slice(0, 300),
-        avatarUrl: avatarUrl || '',
+        avatarUrl: finalAvatarUrl || '',
       });
       onSaved?.(data);
       onClose?.();
@@ -56,6 +111,8 @@ export default function EditProfileModal({
       setSaving(false);
     }
   };
+
+  const currentDisplay = previewUpload || avatarUrl;
 
   return (
     <AnimatePresence>
@@ -87,13 +144,60 @@ export default function EditProfileModal({
               </button>
             </header>
 
+            {/* Avatar Section with Dropdown Selector */}
             <div className="q-ep-avatar-row">
-              <UserAvatar src={avatarUrl} name={name} size={72} />
-              <div className="q-ep-avatar-actions">
-                <button type="button" className="q-ep-btn soft" onClick={() => onChangeAvatar?.()}>
-                  Change avatar
-                </button>
-                <span className="q-ep-hint">Preset or upload — saved with this form</span>
+              <div className="rounded-full p-1 bg-gradient-to-tr from-violet-500 to-indigo-500 shrink-0">
+                <UserAvatar src={currentDisplay} name={name} size={64} />
+              </div>
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="space-y-1">
+                  <label htmlFor="modal-avatar-select" className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                    <span>Avatar Selection Menu:</span>
+                  </label>
+                  <select
+                    id="modal-avatar-select"
+                    value={uploadFile ? '__custom__' : avatarUrl === '' ? '__initials__' : avatarUrl}
+                    onChange={(e) => handleDropdownAvatarChange(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0c0d14] px-3 py-2 text-xs font-medium text-zinc-100 focus:border-violet-500 focus:outline-none"
+                  >
+                    <optgroup label="Preset Avatars">
+                      {AVATAR_OPTIONS.map((a) => (
+                        <option key={a.id} value={a.url}>
+                          {a.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Options">
+                      <option value="__custom__">📷 Upload Custom Photo...</option>
+                      <option value="__initials__">🔤 Default Initials (No Photo)</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2 pt-0.5">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                    onChange={handlePickFile}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-[11px] font-medium text-violet-300 hover:text-violet-200 transition"
+                  >
+                    {uploadFile ? 'Change image file' : 'Upload custom file'}
+                  </button>
+                  <span className="text-zinc-600">·</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDropdownAvatarChange('__initials__')}
+                    className="text-[11px] text-zinc-400 hover:text-zinc-200 transition"
+                  >
+                    Use initials
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -116,14 +116,17 @@ export default function Profile() {
   if (!profile) {
     return (
       <Layout>
-        <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-20 text-center">
-          <h2 className="text-lg font-semibold text-red-300">User not found</h2>
-          <p className="mt-1 text-sm text-zinc-500">This profile may have been removed.</p>
+        <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 text-xl text-red-400">
+            ⚠
+          </div>
+          <h2 className="text-xl font-bold text-zinc-100">User not found</h2>
+          <p className="mt-2 text-sm text-zinc-400">This profile may have been removed or does not exist.</p>
           <Link
             to="/home"
-            className="mt-5 rounded-full border border-white/12 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/5"
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-semibold text-zinc-200 transition hover:bg-white/10"
           >
-            ← Back home
+            ← Back to Home
           </Link>
         </div>
       </Layout>
@@ -134,7 +137,7 @@ export default function Profile() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-3xl px-4 pb-20 pt-2">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-24 pt-4">
         <ProfileHeader
           profile={profile}
           isSelf={isSelf}
@@ -143,6 +146,7 @@ export default function Profile() {
           onFollow={toggleFollow}
           onEdit={() => setEditOpen(true)}
           onAvatar={() => setPickerOpen(true)}
+          onAvatarSaved={applyUserUpdate}
           onLogout={() => {
             logout();
             navigate('/login');
@@ -153,18 +157,18 @@ export default function Profile() {
 
         <ProfileTabs active={tab} onChange={setTab} postCount={posts.length} />
 
-        <div className="mt-6">
+        <div className="mt-8">
           {tab === 'posts' && (
             <>
               {postsError && (
-                <p className="mb-4 text-sm text-amber-200/80">
-                  Couldn’t load posts. Try refreshing the page.
-                </p>
+                <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-amber-200">
+                  Couldn’t load posts at this moment. Try refreshing the page.
+                </div>
               )}
               {posts.length === 0 ? (
                 <ProfileEmptyState isSelf={isSelf} />
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-5 sm:grid-cols-2">
                   {posts.map((p) => (
                     <ProfilePostCard key={p._id} post={p} />
                   ))}
@@ -174,53 +178,70 @@ export default function Profile() {
           )}
 
           {tab === 'about' && (
-            <div className="rounded-xl border border-white/[0.06] bg-[#12131a]/80 p-5">
-              <h3 className="text-sm font-semibold text-zinc-100">About</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#12131c]/90 p-6 sm:p-8 backdrop-blur-md shadow-xl shadow-black/20">
+              <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
+                <span className="material-symbols-outlined text-violet-400 text-[20px]">person</span>
+                <span>About Scholar</span>
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-300">
                 {profile.bio ||
                   (isSelf
-                    ? 'No bio yet. Use Edit profile to introduce yourself.'
-                    : 'No bio shared yet.')}
+                    ? 'No bio yet. Use "Edit profile" to introduce yourself to readers on Quilio.'
+                    : 'No biography shared yet.')}
               </p>
-              <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-zinc-600">Posts</dt>
-                  <dd className="mt-0.5 font-medium text-zinc-200">{posts.length}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-zinc-600">Followers</dt>
-                  <dd className="mt-0.5 font-medium text-zinc-200">
-                    {profile.followersCount || 0}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-zinc-600">Following</dt>
-                  <dd className="mt-0.5 font-medium text-zinc-200">
-                    {profile.followingCount || 0}
-                  </dd>
-                </div>
-                {profile.createdAt && (
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-zinc-600">Joined</dt>
-                    <dd className="mt-0.5 font-medium text-zinc-200">
-                      {new Date(profile.createdAt).toLocaleDateString()}
+
+              <div className="mt-8 border-t border-white/[0.08] pt-6">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Profile Details
+                </h4>
+                <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
+                    <dt className="text-xs font-medium text-zinc-400">Published Posts</dt>
+                    <dd className="mt-1 text-lg font-bold text-zinc-100">{posts.length}</dd>
+                  </div>
+                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
+                    <dt className="text-xs font-medium text-zinc-400">Followers</dt>
+                    <dd className="mt-1 text-lg font-bold text-zinc-100">
+                      {profile.followersCount || 0}
                     </dd>
                   </div>
-                )}
-              </dl>
+                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
+                    <dt className="text-xs font-medium text-zinc-400">Following</dt>
+                    <dd className="mt-1 text-lg font-bold text-zinc-100">
+                      {profile.followingCount || 0}
+                    </dd>
+                  </div>
+                  {profile.createdAt && (
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
+                      <dt className="text-xs font-medium text-zinc-400">Joined Date</dt>
+                      <dd className="mt-1 text-base font-semibold text-zinc-200">
+                        {new Date(profile.createdAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
               {(profile.links || []).length > 0 && (
-                <div className="mt-5">
-                  <h4 className="text-xs uppercase tracking-wide text-zinc-600">Links</h4>
-                  <ul className="mt-2 space-y-1">
+                <div className="mt-6 border-t border-white/[0.08] pt-6">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                    External Links
+                  </h4>
+                  <ul className="mt-3 space-y-2">
                     {profile.links.map((link) => (
                       <li key={link}>
                         <a
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-violet-300 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-300 hover:text-violet-200 hover:underline"
                         >
-                          {link}
+                          <span>↗</span>
+                          <span>{link}</span>
                         </a>
                       </li>
                     ))}

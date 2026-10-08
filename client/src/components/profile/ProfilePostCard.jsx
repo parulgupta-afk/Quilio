@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-function excerptOf(post, max = 120) {
+function excerptOf(post, max = 130) {
   const raw = (post?.excerpt || post?.content || '')
     .replace(/#{1,6}\s*/g, '')
     .replace(/<[^>]+>/g, ' ')
@@ -24,40 +24,51 @@ export default function ProfilePostCard({ post }) {
   return (
     <Link
       to={href}
-      className="group flex flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-[#12131a]/80 transition hover:border-violet-400/30 hover:bg-[#14151e]"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#12131d]/90 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:border-violet-500/40 hover:bg-[#151624] hover:shadow-xl hover:shadow-violet-950/20"
     >
-      <div className="relative aspect-[16/9] overflow-hidden bg-[#0c0d12]">
+      <div className="relative aspect-[16/9] overflow-hidden bg-[#0a0b10]">
         {post.coverImageUrl ? (
           <img
             src={post.coverImageUrl}
             alt=""
             loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-600/20 to-indigo-600/10 text-2xl font-semibold text-white/30">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-900/30 via-indigo-900/20 to-purple-900/10 text-3xl font-bold text-violet-300/40">
             {(post.title || 'Q').charAt(0)}
           </div>
         )}
         {(post.tags || []).length > 0 && (
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-200 backdrop-blur-sm">
-            {post.tags[0]}
+          <span className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-200 backdrop-blur-md ring-1 ring-white/10">
+            #{post.tags[0]}
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 p-3.5">
-        <h3 className="line-clamp-2 text-[0.95rem] font-semibold leading-snug text-zinc-50">
+
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <h3 className="line-clamp-2 text-base font-bold leading-snug text-zinc-100 transition-colors group-hover:text-violet-200">
           {post.title}
         </h3>
         {excerpt && (
-          <p className="line-clamp-2 text-[0.8rem] leading-relaxed text-zinc-500">{excerpt}</p>
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-zinc-400">
+            {excerpt}
+          </p>
         )}
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-[0.7rem] text-zinc-600">
+
+        <div className="mt-auto flex flex-wrap items-center gap-2.5 pt-4 text-[11px] font-medium text-zinc-500">
           <span>{date}</span>
           <span aria-hidden>·</span>
-          <span>♥ {post.likesCount || 0}</span>
-          <span>💬 {post.commentsCount || 0}</span>
-          <span className="rounded border border-violet-400/20 px-1 text-violet-300/80">AI</span>
+          <span className="flex items-center gap-1 text-zinc-400">
+            <span className="text-red-400/80">♥</span> {post.likesCount || 0}
+          </span>
+          <span aria-hidden>·</span>
+          <span className="flex items-center gap-1 text-zinc-400">
+            <span>💬</span> {post.commentsCount || 0}
+          </span>
+          <span className="ml-auto rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300">
+            Essay
+          </span>
         </div>
       </div>
     </Link>
