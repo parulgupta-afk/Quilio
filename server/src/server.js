@@ -42,6 +42,8 @@ const startServer = async () => {
   });
 
   server.listen(PORT, () => {
+    const gId = process.env.GOOGLE_CLIENT_ID;
+    console.log(gId ? 'Google Sign-In: configured (GOOGLE_CLIENT_ID set)' : 'Google Sign-In: GOOGLE_CLIENT_ID not set');
     console.log(`🚀 Quilio server running on port ${PORT}`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   });

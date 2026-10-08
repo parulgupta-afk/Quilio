@@ -121,9 +121,10 @@ const getMe = async (req, res) => {
   }
 };
 
-// @desc    Google JWT OAuth login / signup
+// @desc    Google JWT OAuth login / signup (Google Identity Services ID token)
 // @route   POST /api/auth/google
 // @access  Public
+// Note: GIS uses Client ID only. Client Secret is for server-side code flow (not required here).
 const googleLogin = async (req, res) => {
   try {
     const { credential, email: bodyEmail, name: bodyName, googleId: bodyGoogleId, avatarUrl: bodyAvatarUrl } = req.body;
@@ -132,6 +133,8 @@ const googleLogin = async (req, res) => {
     let name = bodyName;
     let googleId = bodyGoogleId;
     let avatarUrl = bodyAvatarUrl || '';
+
+    const expectedAud = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '';
 
     // If a Google JWT credential (ID Token) is passed:
     if (credential) {
@@ -154,18 +157,27 @@ const googleLogin = async (req, res) => {
         });
 
         if (tokenInfo && tokenInfo.email) {
+          // Verify token was issued for our OAuth Web Client ID
+          if (expectedAud && tokenInfo.aud && tokenInfo.aud !== expectedAud) {
+            console.warn('Google token aud mismatch', { got: tokenInfo.aud, expected: expectedAud });
+            return res.status(401).json({
+              message: 'Google token was not issued for this app. Check GOOGLE_CLIENT_ID matches the Web client ID.',
+            });
+          }
           email = tokenInfo.email;
           name = tokenInfo.name || tokenInfo.email.split('@')[0];
           googleId = tokenInfo.sub;
           avatarUrl = tokenInfo.picture || avatarUrl;
         } else {
-          // If tokeninfo returned error (e.g. custom or mock JWT token in dev), decode payload
-          const decoded = jwt.decode(credential);
-          if (decoded && (decoded.email || decoded.sub)) {
-            email = decoded.email || email;
-            name = decoded.name || name || (email ? email.split('@')[0] : 'Google User');
-            googleId = decoded.sub || googleId;
-            avatarUrl = decoded.picture || avatarUrl;
+          // Dev fallback only when GOOGLE_CLIENT_ID is not set
+          if (!expectedAud) {
+            const decoded = jwt.decode(credential);
+            if (decoded && (decoded.email || decoded.sub)) {
+              email = decoded.email || email;
+              name = decoded.name || name || (email ? email.split('@')[0] : 'Google User');
+              googleId = decoded.sub || googleId;
+              avatarUrl = decoded.picture || avatarUrl;
+            }
           }
         }
       } catch (err) {
@@ -174,7 +186,9 @@ const googleLogin = async (req, res) => {
     }
 
     if (!email) {
-      return res.status(400).json({ message: 'Invalid Google authentication credential' });
+      return res.status(400).json({
+        message: 'Invalid Google authentication credential. Ensure VITE_GOOGLE_CLIENT_ID (client) and GOOGLE_CLIENT_ID (server) match your Web client ID.',
+      });
     }
 
     email = email.toLowerCase().trim();

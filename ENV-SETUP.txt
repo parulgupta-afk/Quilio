@@ -1,0 +1,26 @@
+GOOGLE SIGN-IN — what to put where
+==================================
+
+CLIENT (React / Vite)  →  client/.env
+--------------------------------------
+VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+
+SERVER (Node)  →  server/.env
+--------------------------------------
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-secret   (optional for this app)
+
+IMPORTANT
+- Client ID must be the SAME in both files.
+- Do NOT put Client Secret in the frontend.
+- Authorized JavaScript origins must include: http://localhost:5173
+- After changing any .env, restart server AND client (Vite only reads env at start).
+
+Google Cloud Console checklist
+- Application type: Web application
+- Authorized JavaScript origins: http://localhost:5173
+- Redirect URI not required for GIS button (ID token) flow
+
+Restart:
+  cd server && npm run dev
+  cd client && npm run dev
