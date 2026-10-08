@@ -1,17 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import WorkspaceShell from '../components/workspace/WorkspaceShell';
+import HeroSection from '../components/home/HeroSection';
+import FeaturedPosts from '../components/home/FeaturedPosts';
+import ContinueLearning from '../components/home/ContinueLearning';
+import AIKnowledgeSection from '../components/home/AIKnowledgeSection';
+import ExploreTopics from '../components/home/ExploreTopics';
+import TrendingPosts from '../components/home/TrendingPosts';
+import LatestPosts from '../components/home/LatestPosts';
 
 export default function HomeFeed() {
   const { isAuthenticated } = useAuthStore();
-  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedType, setFeedType] = useState('latest');
+  const [attempts, setAttempts] = useState([]);
 
   useEffect(() => {
+    let ok = true;
     const fetchPosts = async () => {
       setLoading(true);
       try {
@@ -19,22 +27,57 @@ export default function HomeFeed() {
           isAuthenticated && feedType === 'for-you'
             ? await api.get('/recommend/feed')
             : await api.get('/posts');
+        if (!ok) return;
         setPosts(res.data.posts || res.data || []);
       } catch {
-        setPosts([]);
+        if (ok) setPosts([]);
       } finally {
-        setLoading(false);
+        if (ok) setLoading(false);
       }
     };
     fetchPosts();
+    return () => {
+      ok = false;
+    };
   }, [isAuthenticated, feedType]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setAttempts([]);
+      return undefined;
+    }
+    let ok = true;
+    api
+      .get('/learn/progress/me')
+      .then((r) => {
+        if (ok) setAttempts(Array.isArray(r.data) ? r.data : r.data?.attempts || []);
+      })
+      .catch(() => {
+        if (ok) setAttempts([]);
+      });
+    return () => {
+      ok = false;
+    };
+  }, [isAuthenticated]);
+
   const list = Array.isArray(posts) ? posts : [];
+
+  const tagStats = useMemo(() => {
+    const map = new Map();
+    for (const p of list) {
+      for (const t of p.tags || []) {
+        map.set(t, (map.get(t) || 0) + 1);
+      }
+    }
+    return [...map.entries()]
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [list]);
 
   return (
     <WorkspaceShell
       title="Home"
-      subtitle="Read, ask AI, and learn from the feed"
+      subtitle="Your knowledge feed"
       actions={
         <>
           <Link to="/search" className="ag-btn-ghost">
@@ -46,95 +89,31 @@ export default function HomeFeed() {
         </>
       }
     >
-      {/* Feed tabs */}
-      <div className="ag-meta-row home-feed-tabs">
-        <button
-          type="button"
-          className={`ag-chip ${feedType === 'for-you' ? 'strong' : ''}`}
-          onClick={() => setFeedType('for-you')}
-        >
-          For You
-        </button>
-        <button
-          type="button"
-          className={`ag-chip ${feedType === 'latest' ? 'strong' : ''}`}
-          onClick={() => setFeedType('latest')}
-        >
-          Latest
-        </button>
-        <span className="ag-chip">READ → ASK AI → LEARN</span>
-      </div>
-
-      {loading && <p className="ag-muted">Loading feed…</p>}
-
-      {!loading && list.length === 0 && (
-        <div className="ag-empty">
-          <p>No posts in the feed yet.</p>
-          <Link to="/write" className="ag-btn-primary">
-            Write the first post
-          </Link>
-          <p className="ag-muted" style={{ marginTop: 12 }}>
-            Or open <Link to="/dashboard" className="ag-card-action">Dashboard</Link> to manage your workspace.
-          </p>
+      <div className="qh-home">
+        <div className="qh-feed-tabs">
+          <button
+            type="button"
+            className={feedType === 'for-you' ? 'on' : ''}
+            onClick={() => setFeedType('for-you')}
+          >
+            For You
+          </button>
+          <button
+            type="button"
+            className={feedType === 'latest' ? 'on' : ''}
+            onClick={() => setFeedType('latest')}
+          >
+            Latest
+          </button>
         </div>
-      )}
 
-      <div className="ag-list home-feed-list">
-        {list.map((post) => {
-          const href = post.slug ? `/post/${post.slug}` : `/post/${post._id}`;
-          const excerpt = (post.excerpt || post.content || '')
-            .replace(/#{1,6}\s*/g, '')
-            .replace(/\n+/g, ' ')
-            .trim()
-            .slice(0, 160);
-
-          return (
-            <article
-              key={post._id}
-              className="ag-card home-feed-card"
-              onClick={() => navigate(href)}
-              role="link"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') navigate(href);
-              }}
-            >
-              <div className="ag-card-icon home-feed-avatar">
-                {(post.author?.name || 'U').charAt(0)}
-              </div>
-              <div className="ag-card-body">
-                <div className="home-feed-author">
-                  <strong>{post.author?.name || 'Author'}</strong>
-                  <span className="ag-muted">
-                    · {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
-                  </span>
-                </div>
-                <p className="ag-card-title">{post.title}</p>
-                {excerpt && (
-                  <p className="home-feed-excerpt">
-                    {excerpt}
-                    {excerpt.length >= 160 ? '…' : ''}
-                  </p>
-                )}
-                <div className="ag-card-meta">
-                  <span>❤ {post.likesCount || 0}</span>
-                  <span>·</span>
-                  <span>💬 {post.commentsCount || 0}</span>
-                  {post.tags?.slice(0, 3).map((t) => (
-                    <span key={t}>#{t}</span>
-                  ))}
-                </div>
-              </div>
-              <Link
-                to={href}
-                className="ag-card-action"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Open
-              </Link>
-            </article>
-          );
-        })}
+        <HeroSection />
+        <FeaturedPosts posts={list} />
+        <ContinueLearning attempts={attempts} />
+        <AIKnowledgeSection />
+        <ExploreTopics tags={tagStats} />
+        <TrendingPosts posts={list} />
+        <LatestPosts posts={list} loading={loading} />
       </div>
     </WorkspaceShell>
   );
