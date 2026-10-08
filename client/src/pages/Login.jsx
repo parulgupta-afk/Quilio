@@ -2,11 +2,13 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import Auth11 from '../components/auth/Auth11';
+import api from '../services/api';
 
 export default function Login() {
-  const { login, googleLogin, register, isLoading, error, clearError } = useAuthStore();
+  const { login, googleLogin, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const [localError, setLocalError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const handleSubmit = async ({ email, password }) => {
     setLocalError('');
@@ -34,23 +36,34 @@ export default function Login() {
   const handleDemo = async () => {
     setLocalError('');
     clearError?.();
-    // Try login first
-    let result = await login('aria@quilio.app', 'demo1234');
-    if (result?.success) {
+    setBusy(true);
+    try {
+      // Dedicated endpoint creates/resets aria@quilio.app and returns JWT
+      const { data } = await api.post('/auth/demo-login');
+      useAuthStore.setState({
+        user: {
+          _id: data._id,
+          name: data.name,
+          email: data.email,
+          avatarUrl: data.avatarUrl,
+          bio: data.bio,
+        },
+        token: data.token,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
       navigate('/home');
-      return;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        (!error.response
+          ? 'Cannot reach API. Start the server (port 5000).'
+          : 'Demo login failed. Check MongoDB and server logs.');
+      setLocalError(message);
+    } finally {
+      setBusy(false);
     }
-    // Create demo user if missing, then login
-    result = await register('Aria Chen', 'aria@quilio.app', 'demo1234');
-    if (result?.success) {
-      navigate('/home');
-      return;
-    }
-    // If exists but bad hash — try register message
-    setLocalError(
-      result?.message ||
-        'Demo login failed. Run: cd server && npm run seed  then use aria@quilio.app / demo1234'
-    );
   };
 
   return (
@@ -59,7 +72,7 @@ export default function Login() {
       onSubmit={handleSubmit}
       onGoogleCredential={handleGoogle}
       onDemoLogin={handleDemo}
-      isLoading={isLoading}
+      isLoading={isLoading || busy}
       errorMessage={localError || error || ''}
     />
   );

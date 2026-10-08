@@ -104,7 +104,13 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    if (error.name === 'MongoServerError' || error.name === 'MongooseError' || error.name === 'MongoNetworkError') {
+      return res.status(503).json({ message: 'Database unavailable. Check MongoDB connection (MONGODB_URI).' });
+    }
+    if (error.message && error.message.includes('secret')) {
+      return res.status(500).json({ message: 'Server misconfiguration: JWT_SECRET is invalid or missing.' });
+    }
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 
@@ -236,9 +242,48 @@ const googleLogin = async (req, res) => {
   }
 };
 
+
+// @desc    Ensure demo user exists with known password and log in
+// @route   POST /api/auth/demo-login
+// @access  Public
+const demoLogin = async (req, res) => {
+  try {
+    const email = 'aria@quilio.app';
+    const password = 'demo1234';
+    let user = await User.findOne({ email }).select('+passwordHash');
+    if (!user) {
+      user = await User.create({
+        name: 'Aria Chen',
+        email,
+        passwordHash: password,
+        bio: 'Demo scholar account',
+      });
+    } else {
+      user.passwordHash = password;
+      await user.save();
+    }
+    const token = generateToken(user._id);
+    return res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+      token,
+    });
+  } catch (error) {
+    console.error('Demo login error:', error.message);
+    if (!process.env.MONGODB_URI || error.name === 'MongooseError') {
+      return res.status(503).json({ message: 'Database unavailable' });
+    }
+    res.status(500).json({ message: 'Demo login failed: ' + error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
   googleLogin,
   getMe,
+  demoLogin,
 };

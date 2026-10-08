@@ -30,9 +30,15 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    message: 'Quilio API is running',
+  const mongoose = require('mongoose');
+  const dbState = mongoose.connection.readyState;
+  // 0=disconnected 1=connected 2=connecting 3=disconnecting
+  const dbLabels = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  const dbOk = dbState === 1;
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'degraded',
+    message: dbOk ? 'Quilio API is running' : 'API up but MongoDB is not connected',
+    database: dbLabels[dbState] || String(dbState),
     timestamp: new Date().toISOString(),
   });
 });

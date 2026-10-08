@@ -67,14 +67,35 @@ const useAuthStore = create(
 
           return { success: true };
         } catch (error) {
-          const message = error.response?.data?.message || 'Login failed';
+          let message = 'Login failed';
+          if (!error.response) {
+            message =
+              'Cannot reach API. Is the server running on port 5000? (Vite proxies /api → localhost:5000)';
+          } else if (error.response.status === 401) {
+            message =
+              error.response.data?.message ||
+              'Invalid email or password. Demo: aria@quilio.app / demo1234 (run npm run seed in server/)';
+          } else if (error.response.status === 400) {
+            message = error.response.data?.message || 'Invalid request';
+          } else if (error.response.status === 503) {
+            message =
+              error.response.data?.message ||
+              'Database unavailable. Check MONGODB_URI and that MongoDB is reachable.';
+          } else if (error.response.status >= 500) {
+            message =
+              error.response.data?.message ||
+              'Server error. Check server terminal logs and JWT_SECRET / MongoDB.';
+          } else {
+            message = error.response.data?.message || message;
+          }
           set({ error: message, isLoading: false });
           return { success: false, message };
         } finally {
-          // Guarantee spinner is never stuck
           set((s) => (s.isLoading ? { isLoading: false } : {}));
         }
       },
+
+      
 
       // Google Login
       googleLogin: async (credentialOrPayload) => {

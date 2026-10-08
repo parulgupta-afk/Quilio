@@ -7,11 +7,15 @@ const connectDB = require('./config/db');
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  if (process.env.MONGODB_URI) {
-    await connectDB();
-  } else {
-    console.log('⚠️  MONGODB_URI not set — skipping database connection');
+  if (!process.env.MONGODB_URI) {
+    console.error('FATAL: MONGODB_URI is not set in server/.env — login cannot work without MongoDB');
+    process.exit(1);
   }
+  if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET is not set in server/.env — tokens cannot be signed');
+    process.exit(1);
+  }
+  await connectDB();
 
   const server = http.createServer(app);
 
