@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import Auth11 from '../components/auth/Auth11';
 
 export default function Register() {
-  const { register, isLoading, error, clearError } = useAuthStore();
+  const { register, googleLogin, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
   const [localError, setLocalError] = useState('');
 
@@ -29,12 +29,25 @@ export default function Register() {
     }
     const result = await register(name.trim(), email.trim(), password);
     if (result?.success) navigate('/home');
+    else setLocalError(result?.message || error || 'Registration failed');
   };
+
+  const handleGoogle = useCallback(
+    async (credential) => {
+      setLocalError('');
+      clearError?.();
+      const result = await googleLogin(credential);
+      if (result?.success) navigate('/home');
+      else setLocalError(result?.message || 'Google sign-in failed');
+    },
+    [googleLogin, clearError, navigate]
+  );
 
   return (
     <Auth11
       mode="register"
       onSubmit={handleSubmit}
+      onGoogleCredential={handleGoogle}
       isLoading={isLoading}
       errorMessage={localError || error || ''}
     />

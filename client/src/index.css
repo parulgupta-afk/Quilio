@@ -2878,3 +2878,29 @@ a.ns-tab-btn { text-decoration: none; color: inherit; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.w-auth11-demo {
+  border-color: rgba(128, 131, 255, 0.35) !important;
+  background: rgba(128, 131, 255, 0.1) !important;
+}
+.w-auth11-google-official {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+  margin-bottom: 0.25rem;
+}
+.w-auth11-google-official:empty {
+  display: none;
+}
+.w-auth11-hint {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #737373;
+}
+.w-auth11-hint code {
+  background: #1a1a1a;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  color: #c0c1ff;
+}
