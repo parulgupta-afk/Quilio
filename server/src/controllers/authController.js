@@ -78,7 +78,7 @@ const login = async (req, res) => {
     const user = await User.findOne({ email: cleanEmail }).select('+passwordHash');
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials. If this is a demo account, use password demo1234.' });
+      return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     if (!user.passwordHash) {
@@ -87,10 +87,9 @@ const login = async (req, res) => {
       });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials. Note: demo accounts use password "demo1234".' });
+      return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     const token = generateToken(user._id);

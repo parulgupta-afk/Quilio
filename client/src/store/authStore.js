@@ -40,6 +40,9 @@ const useAuthStore = create(
             error.response?.data?.message || 'Registration failed';
           set({ error: message, isLoading: false });
           return { success: false, message };
+        } finally {
+          // Guarantee spinner is never stuck
+          set((s) => (s.isLoading ? { isLoading: false } : {}));
         }
       },
 
@@ -67,6 +70,9 @@ const useAuthStore = create(
           const message = error.response?.data?.message || 'Login failed';
           set({ error: message, isLoading: false });
           return { success: false, message };
+        } finally {
+          // Guarantee spinner is never stuck
+          set((s) => (s.isLoading ? { isLoading: false } : {}));
         }
       },
 
@@ -100,6 +106,9 @@ const useAuthStore = create(
             error.response?.data?.message || 'Google authentication failed';
           set({ error: message, isLoading: false });
           return { success: false, message };
+        } finally {
+          // Guarantee spinner is never stuck
+          set((s) => (s.isLoading ? { isLoading: false } : {}));
         }
       },
 
@@ -112,6 +121,7 @@ const useAuthStore = create(
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
           error: null,
         });
       },

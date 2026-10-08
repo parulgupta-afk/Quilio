@@ -18,13 +18,19 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+// Redirect already-authenticated users away from auth pages
+function PublicRoute({ children }) {
+  const { isAuthenticated } = useAuthStore();
+  return isAuthenticated ? <Navigate to="/home" replace /> : children;
+}
+
 export default function App() {
   return (
     <Routes>
-      {/* Auth & Public */}
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* Auth & Public — redirect if already logged in */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/welcome" element={<Welcome />} />
 
       {/* App — login required */}
