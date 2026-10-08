@@ -79,12 +79,7 @@ export default function Layout({ children }) {
                 onClick={() => navigate(`/profile/${user?._id}`)}
                 title={`Profile: ${user?.name}`}
               >
-                <div
-                  className="ns-avatar"
-                  style={{ width: 32, height: 32, fontSize: 13 }}
-                >
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
+                <UserAvatar src={user?.avatarUrl} name={user?.name} size={32} />
               </div>
               <button
                 className="ns-icon-btn"

@@ -3,15 +3,18 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import Layout from '../components/Layout';
+import AvatarPicker from '../components/AvatarPicker';
+import UserAvatar from '../components/UserAvatar';
 
 export default function Profile() {
   const { id } = useParams();
-  const { user: me, isAuthenticated, logout } = useAuthStore();
+  const { user: me, isAuthenticated, logout, updateUser } = useAuthStore();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -54,6 +57,17 @@ export default function Profile() {
     }
   };
 
+  const handleAvatarSaved = (updated) => {
+    setProfile((p) => ({ ...p, avatarUrl: updated.avatarUrl }));
+    if (me?._id === updated._id || me?._id === id) {
+      updateUser?.({
+        avatarUrl: updated.avatarUrl,
+        name: updated.name,
+        bio: updated.bio,
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -91,30 +105,41 @@ export default function Profile() {
             flexWrap: 'wrap',
           }}
         >
-          <div className="avatar" style={{ width: 72, height: 72, fontSize: 28 }}>
-            {profile.name?.charAt(0)}
+          <div className="q-profile-avatar-wrap">
+            <UserAvatar
+              src={profile.avatarUrl}
+              name={profile.name}
+              size={72}
+              onClick={isSelf ? () => setPickerOpen(true) : undefined}
+              title={isSelf ? 'Change avatar' : profile.name}
+            />
+            {isSelf && (
+              <button
+                type="button"
+                className="q-avatar-edit-badge"
+                onClick={() => setPickerOpen(true)}
+              >
+                Edit
+              </button>
+            )}
           </div>
           <div style={{ flex: 1, minWidth: 180 }}>
             <h1 className="serif" style={{ fontSize: 28, marginBottom: 6, color: '#F1F1F4' }}>
               {profile.name}
             </h1>
             {profile.bio && (
-              <p className="muted" style={{ marginBottom: 8 }}>
+              <p className="muted" style={{ marginBottom: 8, lineHeight: 1.5 }}>
                 {profile.bio}
               </p>
             )}
-            <p className="faint" style={{ fontSize: 13 }}>
-              {profile.followersCount || 0} followers · {profile.followingCount || 0} following ·{' '}
-              {posts.length} posts
+            <p className="faint" style={{ fontSize: 13, margin: 0 }}>
+              {profile.followersCount || 0} followers · {profile.followingCount || 0} following
+              {profile.createdAt && ` · Joined ${new Date(profile.createdAt).toLocaleDateString()}`}
             </p>
-            {profile.createdAt && (
-              <p className="faint" style={{ fontSize: 12, marginTop: 4 }}>
-                Joined {new Date(profile.createdAt).toLocaleDateString()}
-              </p>
-            )}
           </div>
           {isAuthenticated && !isSelf && (
             <button
+              type="button"
               onClick={toggleFollow}
               className={following ? 'btn btn-ghost' : 'btn btn-primary'}
             >
@@ -127,6 +152,7 @@ export default function Profile() {
                 Dashboard
               </Link>
               <button
+                type="button"
                 onClick={() => {
                   logout();
                   navigate('/login');
@@ -178,6 +204,16 @@ export default function Profile() {
           })
         )}
       </div>
+
+      {isSelf && (
+        <AvatarPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          currentAvatar={profile.avatarUrl || ''}
+          userName={profile.name}
+          onSaved={handleAvatarSaved}
+        />
+      )}
     </Layout>
   );
 }

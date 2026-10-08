@@ -1,3 +1,4 @@
+import UserAvatar from '../UserAvatar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import useAuthStore from '../../store/authStore';
@@ -68,7 +69,7 @@ export default function WorkspaceShell({ title, subtitle, actions, children }) {
 
         <div className="ag-side-foot">
           <div className="ag-user">
-            <div className="ag-avatar">{user?.name?.[0] || 'U'}</div>
+            <UserAvatar src={user?.avatarUrl} name={user?.name} size={34} className="ag-avatar-img" />
             <div>
               <div className="ag-user-name">{user?.name || 'Scholar'}</div>
               <div className="ag-user-email">{user?.email || ''}</div>

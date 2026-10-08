@@ -165,6 +165,17 @@ const useAuthStore = create(
       },
 
       clearError: () => set({ error: null }),
+
+      // Merge profile fields into current user (e.g. after avatar save)
+      updateUser: (partial) => {
+        const cur = get().user || {};
+        set({
+          user: {
+            ...cur,
+            ...partial,
+          },
+        });
+      },
     }),
     {
       name: 'quilio-auth', // localStorage key
