@@ -6,7 +6,7 @@ const TABS = [
 export default function ProfileTabs({ active, onChange, postCount = 0 }) {
   return (
     <div
-      className="flex gap-2 overflow-x-auto border-b border-white/[0.08] pb-px"
+      className="flex justify-center gap-2 overflow-x-auto border-b border-white/[0.08] pb-px"
       role="tablist"
       aria-label="Profile sections"
     >

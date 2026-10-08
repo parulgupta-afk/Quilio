@@ -188,7 +188,7 @@ export default function AvatarDropdownMenu({
       {/* Dropdown Menu Overlay / Card */}
       {isOpen && (
         <div
-          className="absolute left-1/2 z-50 mt-2 w-[340px] -translate-x-1/2 sm:left-0 sm:translate-x-0 sm:w-[380px] rounded-2xl border border-white/10 bg-[#12131c]/95 p-4 shadow-2xl shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-1/2 z-50 mt-2 w-[340px] -translate-x-1/2 sm:w-[390px] rounded-2xl border border-white/10 bg-[#12131c]/95 p-4 shadow-2xl shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
           role="menu"
           aria-orientation="vertical"
         >
