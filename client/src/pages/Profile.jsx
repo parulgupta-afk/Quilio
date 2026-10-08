@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import Layout from '../components/Layout';
 import AvatarPicker from '../components/AvatarPicker';
 import UserAvatar from '../components/UserAvatar';
+import EditProfileModal from '../components/EditProfileModal';
+import AvatarCircles from '../components/AvatarCircles';
 
 export default function Profile() {
   const { id } = useParams();
@@ -15,6 +17,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -23,7 +26,7 @@ export default function Profile() {
         const { data } = await api.get(`/users/${id}`);
         setProfile(data);
         const postsRes = await api.get(`/posts/author/${id}`);
-        setPosts(postsRes.data.posts || []);
+        setPosts(postsRes.data.posts || postsRes.data || []);
       } catch (e) {
         console.error(e);
         setProfile(null);
@@ -57,8 +60,13 @@ export default function Profile() {
     }
   };
 
-  const handleAvatarSaved = (updated) => {
-    setProfile((p) => ({ ...p, avatarUrl: updated.avatarUrl }));
+  const applyUserUpdate = (updated) => {
+    setProfile((p) => ({
+      ...p,
+      name: updated.name ?? p?.name,
+      bio: updated.bio ?? p?.bio,
+      avatarUrl: updated.avatarUrl ?? p?.avatarUrl,
+    }));
     if (me?._id === updated._id || me?._id === id) {
       updateUser?.({
         avatarUrl: updated.avatarUrl,
@@ -68,10 +76,37 @@ export default function Profile() {
     }
   };
 
+  const authorCircles = useMemo(() => {
+    // Show unique co-authors / self from posts for social proof strip
+    const map = new Map();
+    for (const p of posts) {
+      const a = p.author;
+      if (!a?._id) continue;
+      if (!map.has(a._id)) {
+        map.set(a._id, {
+          imageUrl: a.avatarUrl,
+          name: a.name,
+          profileUrl: `/profile/${a._id}`,
+        });
+      }
+    }
+    // Always include profile user
+    if (profile) {
+      map.set(profile._id || id, {
+        imageUrl: profile.avatarUrl,
+        name: profile.name,
+        profileUrl: `/profile/${id}`,
+      });
+    }
+    return [...map.values()].slice(0, 5);
+  }, [posts, profile, id]);
+
   if (loading) {
     return (
       <Layout>
-        <div className="page muted">Loading profile…</div>
+        <div className="qp-page">
+          <p className="qp-muted">Loading profile…</p>
+        </div>
       </Layout>
     );
   }
@@ -79,140 +114,221 @@ export default function Profile() {
   if (!profile) {
     return (
       <Layout>
-        <div className="page" style={{ color: '#fca5a5' }}>
-          User not found
-          <br />
-          <Link to="/home" style={{ color: '#C9C9FF' }}>
-            ← Home
-          </Link>
+        <div className="qp-page">
+          <div className="qp-empty">
+            <h2>User not found</h2>
+            <Link to="/home" className="qp-btn ghost">
+              ← Back home
+            </Link>
+          </div>
         </div>
       </Layout>
     );
   }
 
   const isSelf = me?._id === id;
+  const joined = profile.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString(undefined, {
+        month: 'short',
+        year: 'numeric',
+      })
+    : null;
 
   return (
     <Layout>
-      <div className="page">
-        <div
-          className="card"
-          style={{
-            display: 'flex',
-            gap: 20,
-            alignItems: 'center',
-            marginBottom: 32,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div className="q-profile-avatar-wrap">
-            <UserAvatar
-              src={profile.avatarUrl}
-              name={profile.name}
-              size={72}
-              onClick={isSelf ? () => setPickerOpen(true) : undefined}
-              title={isSelf ? 'Change avatar' : profile.name}
-            />
-            {isSelf && (
-              <button
-                type="button"
-                className="q-avatar-edit-badge"
-                onClick={() => setPickerOpen(true)}
-              >
-                Edit
-              </button>
-            )}
+      <div className="qp-page">
+        <section className="qp-hero">
+          <div className="qp-cover" aria-hidden />
+          <div className="qp-identity">
+            <div className="qp-avatar-block">
+              <div className="qp-avatar-ring">
+                <UserAvatar
+                  src={profile.avatarUrl}
+                  name={profile.name}
+                  size={96}
+                  onClick={isSelf ? () => setPickerOpen(true) : undefined}
+                  title={isSelf ? 'Change avatar' : profile.name}
+                />
+              </div>
+              {isSelf && (
+                <button type="button" className="qp-avatar-edit" onClick={() => setPickerOpen(true)}>
+                  Change photo
+                </button>
+              )}
+            </div>
+
+            <div className="qp-info">
+              <h1 className="qp-name">{profile.name}</h1>
+              {profile.bio ? (
+                <p className="qp-bio">{profile.bio}</p>
+              ) : isSelf ? (
+                <p className="qp-bio qp-bio-empty">
+                  Add a short bio so others know what you write about.
+                </p>
+              ) : null}
+
+              <div className="qp-stats">
+                <div>
+                  <strong>{profile.followersCount || 0}</strong>
+                  <span>Followers</span>
+                </div>
+                <div>
+                  <strong>{profile.followingCount || 0}</strong>
+                  <span>Following</span>
+                </div>
+                <div>
+                  <strong>{posts.length}</strong>
+                  <span>Posts</span>
+                </div>
+                {joined && (
+                  <div>
+                    <strong>{joined}</strong>
+                    <span>Joined</span>
+                  </div>
+                )}
+              </div>
+
+              {authorCircles.length > 0 && (
+                <div className="qp-circles-row">
+                  <AvatarCircles
+                    avatarUrls={authorCircles}
+                    numPeople={Math.max(0, (profile.followersCount || 0) - authorCircles.length)}
+                    size={32}
+                  />
+                  <span className="qp-circles-label">
+                    {(profile.followersCount || 0) > 0
+                      ? 'Followers & network'
+                      : 'Scholar on Quilio'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="qp-actions">
+              {isAuthenticated && !isSelf && (
+                <button
+                  type="button"
+                  className={`qp-btn ${following ? 'ghost' : 'primary'}`}
+                  onClick={toggleFollow}
+                >
+                  {following ? 'Following' : 'Follow'}
+                </button>
+              )}
+              {isSelf && (
+                <>
+                  <button type="button" className="qp-btn primary" onClick={() => setEditOpen(true)}>
+                    Edit profile
+                  </button>
+                  <Link to="/dashboard" className="qp-btn ghost">
+                    Dashboard
+                  </Link>
+                  <Link to="/write" className="qp-btn ghost">
+                    Write
+                  </Link>
+                  <button
+                    type="button"
+                    className="qp-btn danger"
+                    onClick={() => {
+                      logout();
+                      navigate('/login');
+                    }}
+                  >
+                    Log out
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <h1 className="serif" style={{ fontSize: 28, marginBottom: 6, color: '#F1F1F4' }}>
-              {profile.name}
-            </h1>
-            {profile.bio && (
-              <p className="muted" style={{ marginBottom: 8, lineHeight: 1.5 }}>
-                {profile.bio}
-              </p>
-            )}
-            <p className="faint" style={{ fontSize: 13, margin: 0 }}>
-              {profile.followersCount || 0} followers · {profile.followingCount || 0} following
-              {profile.createdAt && ` · Joined ${new Date(profile.createdAt).toLocaleDateString()}`}
-            </p>
+        </section>
+
+        <section className="qp-posts">
+          <div className="qp-posts-head">
+            <h2>Published posts</h2>
+            <span className="qp-muted">{posts.length} total</span>
           </div>
-          {isAuthenticated && !isSelf && (
-            <button
-              type="button"
-              onClick={toggleFollow}
-              className={following ? 'btn btn-ghost' : 'btn btn-primary'}
-            >
-              {following ? 'Following' : 'Follow'}
-            </button>
-          )}
-          {isSelf && (
-            <div style={{ display: 'flex', gap: 10 }}>
-              <Link to="/dashboard" className="btn btn-ghost" style={{ padding: '9px 14px' }}>
-                Dashboard
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  navigate('/login');
-                }}
-                className="btn btn-ghost"
-                style={{ padding: '9px 14px', color: '#ffb4ab', borderColor: 'rgba(255, 180, 171, 0.3)' }}
-              >
-                Log Out
-              </button>
+
+          {posts.length === 0 ? (
+            <div className="qp-empty-card">
+              <p>No published posts yet.</p>
+              {isSelf && (
+                <Link to="/write" className="qp-btn primary">
+                  Write your first post
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="qp-post-grid">
+              {posts.map((p) => {
+                const href = p.slug ? `/post/${p.slug}` : `/post/${p._id}`;
+                const excerpt = (p.excerpt || p.content || '')
+                  .replace(/#{1,6}\s*/g, '')
+                  .replace(/<[^>]+>/g, ' ')
+                  .replace(/\n+/g, ' ')
+                  .trim()
+                  .slice(0, 130);
+                return (
+                  <Link key={p._id} to={href} className="qp-post-card">
+                    {p.coverImageUrl ? (
+                      <div className="qp-post-cover">
+                        <img src={p.coverImageUrl} alt="" loading="lazy" />
+                      </div>
+                    ) : (
+                      <div className="qp-post-cover qp-post-cover-fallback">
+                        <span>{(p.title || 'Q').charAt(0)}</span>
+                      </div>
+                    )}
+                    <div className="qp-post-body">
+                      <h3>{p.title}</h3>
+                      {excerpt && (
+                        <p>
+                          {excerpt}
+                          {excerpt.length >= 130 ? '…' : ''}
+                        </p>
+                      )}
+                      <div className="qp-post-meta">
+                        <span>
+                          {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}
+                        </span>
+                        <span>♥ {p.likesCount || 0}</span>
+                        <span>💬 {p.commentsCount || 0}</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
-        </div>
-
-        <h2 className="serif" style={{ fontSize: 20, marginBottom: 16, color: '#F1F1F4' }}>
-          Posts
-        </h2>
-
-        {posts.length === 0 ? (
-          <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-            <p className="muted" style={{ marginBottom: 12 }}>
-              No published posts yet.
-            </p>
-            {isSelf && (
-              <Link to="/write" className="btn btn-primary">
-                Write a post
-              </Link>
-            )}
-          </div>
-        ) : (
-          posts.map((p) => {
-            const href = p.slug ? `/post/${p.slug}` : `/post/${p._id}`;
-            const excerpt = (p.excerpt || p.content || '')
-              .replace(/#{1,6}\s*/g, '')
-              .replace(/\n+/g, ' ')
-              .substring(0, 140);
-            return (
-              <Link key={p._id} to={href} className="card" style={{ display: 'block' }}>
-                <h3 style={{ fontSize: 18, marginBottom: 8 }}>{p.title}</h3>
-                <p className="ex" style={{ marginBottom: 10 }}>
-                  {excerpt}
-                  {excerpt.length >= 140 ? '…' : ''}
-                </p>
-                <p className="faint" style={{ fontSize: 13, margin: 0 }}>
-                  {new Date(p.createdAt).toLocaleDateString()} · ❤ {p.likesCount || 0} · 💬{' '}
-                  {p.commentsCount || 0} · {p.viewsCount || 0} views
-                </p>
-              </Link>
-            );
-          })
-        )}
+        </section>
       </div>
 
       {isSelf && (
-        <AvatarPicker
-          open={pickerOpen}
-          onClose={() => setPickerOpen(false)}
-          currentAvatar={profile.avatarUrl || ''}
-          userName={profile.name}
-          onSaved={handleAvatarSaved}
-        />
+        <>
+          <EditProfileModal
+            open={editOpen}
+            onClose={() => setEditOpen(false)}
+            initial={{
+              name: profile.name,
+              email: profile.email || me?.email,
+              bio: profile.bio || '',
+              avatarUrl: profile.avatarUrl || '',
+            }}
+            onSaved={applyUserUpdate}
+            onChangeAvatar={() => {
+              setEditOpen(false);
+              setPickerOpen(true);
+            }}
+          />
+          <AvatarPicker
+            open={pickerOpen}
+            onClose={() => setPickerOpen(false)}
+            currentAvatar={profile.avatarUrl || ''}
+            userName={profile.name}
+            onSaved={(updated) => {
+              applyUserUpdate(updated);
+              // Re-open edit modal optionally — keep closed after avatar save
+            }}
+          />
+        </>
       )}
     </Layout>
   );

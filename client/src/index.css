@@ -3642,3 +3642,209 @@ a.ns-tab-btn { text-decoration: none; color: inherit; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;
   font-size: 0.75rem; color: #71717a;
 }
+
+/* ── MagicUI-style AvatarCircles ── */
+.q-avatar-circles {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.q-avatar-circle {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid #0c0e13;
+  overflow: hidden;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-left: -10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.q-avatar-circle:first-child { margin-left: 0; }
+.q-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.q-avatar-circle-more {
+  background: #18181b;
+  border-color: #27272a;
+  color: #e4e4e7;
+  font-size: 0.7rem;
+}
+.qp-circles-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+.qp-circles-label {
+  font-size: 0.8rem;
+  color: #71717a;
+}
+
+/* ── Watermelon-inspired Edit Profile modal ── */
+.q-ep-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.q-ep-backdrop {
+  position: fixed;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+.q-ep-modal {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1c1c1e;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  padding: 1.35rem 1.35rem 1.25rem;
+}
+.q-ep-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.q-ep-head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+.q-ep-head p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #a1a1aa;
+}
+.q-ep-x {
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #a1a1aa;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.q-ep-x:hover { color: #fff; }
+
+.q-ep-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.q-ep-avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.q-ep-hint {
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+.q-ep-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.q-ep-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.q-ep-field > span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+.q-ep-field input,
+.q-ep-field textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0a0a0b;
+  color: #fafafa;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+}
+.q-ep-field input:focus,
+.q-ep-field textarea:focus {
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.q-ep-field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.q-ep-field em {
+  font-style: normal;
+  font-size: 0.7rem;
+  color: #52525b;
+  text-align: right;
+}
+
+.q-ep-error {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: #fca5a5;
+}
+.q-ep-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+.q-ep-btn {
+  border-radius: 999px;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.q-ep-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.q-ep-btn.primary {
+  background: #fff;
+  color: #0a0a0a;
+}
+.q-ep-btn.primary:hover:not(:disabled) { background: #e4e4e7; }
+.q-ep-btn.ghost {
+  background: #3a3a3c;
+  color: #fff;
+  border-color: #48484a;
+}
+.q-ep-btn.soft {
+  background: rgba(99, 102, 241, 0.15);
+  color: #c7d2fe;
+  border-color: rgba(129, 140, 248, 0.3);
+  width: fit-content;
+}
