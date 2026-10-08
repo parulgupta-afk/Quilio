@@ -7,7 +7,12 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    // Allow Google Identity Services popup / postMessage in dev
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  })
+);
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,

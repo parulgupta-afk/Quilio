@@ -21,11 +21,15 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
-/**
- * Auth-11 shell — email/password + Google GIS + 1-click demo login
- */
+// Module-level: avoid initialize() on every React StrictMode remount
+let gsiInitializedFor = '';
+let gsiCredentialHandler = null;
+
+const containerVariantsMotion = containerVariants;
+const itemVariantsMotion = itemVariants;
+
 export default function Auth11({
   mode = 'login',
   onSubmit,
@@ -43,9 +47,15 @@ export default function Auth11({
   const [socialNote, setSocialNote] = useState('');
   const googleBtnRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
+  const onGoogleRef = useRef(onGoogleCredential);
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !onGoogleCredential) {
+    onGoogleRef.current = onGoogleCredential;
+    gsiCredentialHandler = (cred) => onGoogleRef.current?.(cred);
+  }, [onGoogleCredential]);
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) {
       setGoogleReady(false);
       return;
     }
@@ -53,37 +63,42 @@ export default function Auth11({
     let cancelled = false;
     let tries = 0;
 
+    const renderBtn = () => {
+      if (cancelled || !googleBtnRef.current || !window.google?.accounts?.id) return;
+      googleBtnRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        shape: 'pill',
+        text: isRegister ? 'signup_with' : 'signin_with',
+        width: 360,
+      });
+      setGoogleReady(true);
+    };
+
     const initGoogle = () => {
       if (cancelled) return;
       const g = window.google?.accounts?.id;
       if (!g) {
-        if (tries++ < 40) setTimeout(initGoogle, 150);
+        if (tries++ < 50) setTimeout(initGoogle, 120);
         return;
       }
 
       try {
-        g.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response) => {
-            if (response?.credential) {
-              onGoogleCredential(response.credential);
-            }
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        if (googleBtnRef.current) {
-          googleBtnRef.current.innerHTML = '';
-          g.renderButton(googleBtnRef.current, {
-            theme: 'outline',
-            size: 'large',
-            shape: 'pill',
-            text: isRegister ? 'signup_with' : 'signin_with',
-            width: 360,
+        if (gsiInitializedFor !== GOOGLE_CLIENT_ID) {
+          g.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response) => {
+              if (response?.credential) {
+                gsiCredentialHandler?.(response.credential);
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
           });
+          gsiInitializedFor = GOOGLE_CLIENT_ID;
         }
-        setGoogleReady(true);
+        renderBtn();
       } catch (err) {
         console.error('Google init error', err);
         setGoogleReady(false);
@@ -94,7 +109,7 @@ export default function Auth11({
     return () => {
       cancelled = true;
     };
-  }, [isRegister, onGoogleCredential]);
+  }, [isRegister]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -104,19 +119,13 @@ export default function Auth11({
   const handleGoogleClickFallback = () => {
     if (!GOOGLE_CLIENT_ID) {
       setSocialNote(
-        'Google sign-in needs VITE_GOOGLE_CLIENT_ID in client/.env — use Demo login or email for now.'
+        'Add VITE_GOOGLE_CLIENT_ID to client/.env. For now use Demo login or email.'
       );
       return;
     }
-    if (!googleReady) {
-      setSocialNote('Google script still loading… try again in a second.');
-      return;
-    }
-    try {
-      window.google?.accounts?.id?.prompt();
-    } catch {
-      setSocialNote('Could not open Google prompt. Use the Google button above or email login.');
-    }
+    setSocialNote(
+      'Google blocked this site origin. In Google Cloud Console → your Web client → Authorized JavaScript origins add exactly: http://localhost:5173 (and http://127.0.0.1:5173). Save, wait 2 minutes, hard refresh.'
+    );
   };
 
   return (
@@ -133,27 +142,22 @@ export default function Auth11({
           <p className="w-auth11-hero-text">
             Knowledge untangled. Chat, quiz, and write with AI grounded in your posts.
           </p>
-          <div className="w-auth11-dots">
-            <span className="on" />
-            <span />
-            <span />
-          </div>
         </div>
       </div>
 
       <div className="w-auth11-form-side">
         <motion.div
           className="w-auth11-form-box"
-          variants={containerVariants}
+          variants={containerVariantsMotion}
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={itemVariants} className="w-auth11-logo-row">
+          <motion.div variants={itemVariantsMotion} className="w-auth11-logo-row">
             <div className="w-auth11-q">Q</div>
             <span>Quilio</span>
           </motion.div>
 
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariantsMotion}>
             <h1 className="w-auth11-h1">
               {isRegister ? 'Create an account' : 'Welcome back'}
             </h1>
@@ -164,11 +168,9 @@ export default function Auth11({
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="w-auth11-socials">
-            {/* Official GIS button */}
+          <motion.div variants={itemVariantsMotion} className="w-auth11-socials">
             <div ref={googleBtnRef} className="w-auth11-google-official" />
 
-            {/* Fallback styled button */}
             {!googleReady && (
               <button type="button" className="w-auth11-social" onClick={handleGoogleClickFallback}>
                 <GoogleIcon style={{ width: 16, height: 16 }} />
@@ -190,7 +192,7 @@ export default function Auth11({
             {socialNote && <p className="w-auth11-note">{socialNote}</p>}
           </motion.div>
 
-          <motion.div variants={itemVariants} className="w-auth11-or">
+          <motion.div variants={itemVariantsMotion} className="w-auth11-or">
             <span />
             <em>Or</em>
             <span />
@@ -198,13 +200,13 @@ export default function Auth11({
 
           <form onSubmit={handleSubmit} className="w-auth11-form">
             {errorMessage && (
-              <motion.div variants={itemVariants} className="w-auth11-error" role="alert">
+              <div className="w-auth11-error" role="alert">
                 {errorMessage}
-              </motion.div>
+              </div>
             )}
 
             {isRegister && (
-              <motion.div variants={itemVariants} className="w-auth11-field">
+              <div className="w-auth11-field">
                 <label htmlFor="name">Full name</label>
                 <input
                   id="name"
@@ -215,10 +217,10 @@ export default function Auth11({
                   autoComplete="name"
                   required
                 />
-              </motion.div>
+              </div>
             )}
 
-            <motion.div variants={itemVariants} className="w-auth11-field">
+            <div className="w-auth11-field">
               <label htmlFor="email">Email</label>
               <input
                 id="email"
@@ -229,9 +231,9 @@ export default function Auth11({
                 autoComplete="email"
                 required
               />
-            </motion.div>
+            </div>
 
-            <motion.div variants={itemVariants} className="w-auth11-field">
+            <div className="w-auth11-field">
               <label htmlFor="password">Password</label>
               <div className="w-auth11-pw">
                 <input
@@ -248,10 +250,10 @@ export default function Auth11({
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-            </motion.div>
+            </div>
 
             {isRegister && (
-              <motion.div variants={itemVariants} className="w-auth11-field">
+              <div className="w-auth11-field">
                 <label htmlFor="confirm">Confirm password</label>
                 <input
                   id="confirm"
@@ -263,17 +265,15 @@ export default function Auth11({
                   required
                   minLength={6}
                 />
-              </motion.div>
+              </div>
             )}
 
-            <motion.div variants={itemVariants}>
-              <button type="submit" className="w-auth11-submit" disabled={isLoading}>
-                {isLoading ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}
-              </button>
-            </motion.div>
+            <button type="submit" className="w-auth11-submit" disabled={isLoading}>
+              {isLoading ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}
+            </button>
           </form>
 
-          <motion.p variants={itemVariants} className="w-auth11-switch">
+          <p className="w-auth11-switch">
             {isRegister ? (
               <>
                 Already have an account? <Link to="/login">Sign in</Link>
@@ -283,12 +283,14 @@ export default function Auth11({
                 Don&apos;t have an account? <Link to="/register">Sign up</Link>
               </>
             )}
-          </motion.p>
+          </p>
 
           {!isRegister && (
-            <motion.p variants={itemVariants} className="w-auth11-hint">
+            <p className="w-auth11-hint">
               Demo: <code>aria@quilio.app</code> / <code>demo1234</code>
-            </motion.p>
+              <br />
+              Run <code>npm run seed</code> in server if demo login fails.
+            </p>
           )}
         </motion.div>
       </div>
