@@ -4,9 +4,12 @@ import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import Layout from '../components/Layout';
 import AvatarPicker from '../components/AvatarPicker';
-import UserAvatar from '../components/UserAvatar';
 import EditProfileModal from '../components/EditProfileModal';
-import AvatarCircles from '../components/AvatarCircles';
+import ProfileHeader from '../components/profile/ProfileHeader';
+import ProfileTabs from '../components/profile/ProfileTabs';
+import ProfilePostCard from '../components/profile/ProfilePostCard';
+import ProfileEmptyState from '../components/profile/ProfileEmptyState';
+import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 
 export default function Profile() {
   const { id } = useParams();
@@ -15,26 +18,41 @@ export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [postsError, setPostsError] = useState(false);
   const [following, setFollowing] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [tab, setTab] = useState('posts');
 
   useEffect(() => {
+    let alive = true;
     const load = async () => {
       setLoading(true);
+      setPostsError(false);
       try {
         const { data } = await api.get(`/users/${id}`);
+        if (!alive) return;
         setProfile(data);
-        const postsRes = await api.get(`/posts/author/${id}`);
-        setPosts(postsRes.data.posts || postsRes.data || []);
-      } catch (e) {
-        console.error(e);
-        setProfile(null);
+        try {
+          const postsRes = await api.get(`/posts/author/${id}`);
+          if (!alive) return;
+          setPosts(postsRes.data.posts || postsRes.data || []);
+        } catch {
+          if (alive) {
+            setPosts([]);
+            setPostsError(true);
+          }
+        }
+      } catch {
+        if (alive) setProfile(null);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
     load();
+    return () => {
+      alive = false;
+    };
   }, [id]);
 
   const toggleFollow = async () => {
@@ -76,37 +94,21 @@ export default function Profile() {
     }
   };
 
-  const authorCircles = useMemo(() => {
-    // Show unique co-authors / self from posts for social proof strip
-    const map = new Map();
-    for (const p of posts) {
-      const a = p.author;
-      if (!a?._id) continue;
-      if (!map.has(a._id)) {
-        map.set(a._id, {
-          imageUrl: a.avatarUrl,
-          name: a.name,
-          profileUrl: `/profile/${a._id}`,
-        });
-      }
-    }
-    // Always include profile user
-    if (profile) {
-      map.set(profile._id || id, {
+  const circles = useMemo(() => {
+    if (!profile) return [];
+    return [
+      {
         imageUrl: profile.avatarUrl,
         name: profile.name,
         profileUrl: `/profile/${id}`,
-      });
-    }
-    return [...map.values()].slice(0, 5);
-  }, [posts, profile, id]);
+      },
+    ];
+  }, [profile, id]);
 
   if (loading) {
     return (
       <Layout>
-        <div className="qp-page">
-          <p className="qp-muted">Loading profile…</p>
-        </div>
+        <ProfileSkeleton />
       </Layout>
     );
   }
@@ -114,191 +116,120 @@ export default function Profile() {
   if (!profile) {
     return (
       <Layout>
-        <div className="qp-page">
-          <div className="qp-empty">
-            <h2>User not found</h2>
-            <Link to="/home" className="qp-btn ghost">
-              ← Back home
-            </Link>
-          </div>
+        <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-20 text-center">
+          <h2 className="text-lg font-semibold text-red-300">User not found</h2>
+          <p className="mt-1 text-sm text-zinc-500">This profile may have been removed.</p>
+          <Link
+            to="/home"
+            className="mt-5 rounded-full border border-white/12 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/5"
+          >
+            ← Back home
+          </Link>
         </div>
       </Layout>
     );
   }
 
   const isSelf = me?._id === id;
-  const joined = profile.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString(undefined, {
-        month: 'short',
-        year: 'numeric',
-      })
-    : null;
 
   return (
     <Layout>
-      <div className="qp-page">
-        <section className="qp-hero">
-          <div className="qp-cover" aria-hidden />
-          <div className="qp-identity">
-            <div className="qp-avatar-block">
-              <div className="qp-avatar-ring">
-                <UserAvatar
-                  src={profile.avatarUrl}
-                  name={profile.name}
-                  size={96}
-                  onClick={isSelf ? () => setPickerOpen(true) : undefined}
-                  title={isSelf ? 'Change avatar' : profile.name}
-                />
-              </div>
-              {isSelf && (
-                <button type="button" className="qp-avatar-edit" onClick={() => setPickerOpen(true)}>
-                  Change photo
-                </button>
-              )}
-            </div>
+      <div className="mx-auto max-w-3xl px-4 pb-20 pt-2">
+        <ProfileHeader
+          profile={profile}
+          isSelf={isSelf}
+          isAuthenticated={isAuthenticated}
+          following={following}
+          onFollow={toggleFollow}
+          onEdit={() => setEditOpen(true)}
+          onAvatar={() => setPickerOpen(true)}
+          onLogout={() => {
+            logout();
+            navigate('/login');
+          }}
+          postCount={posts.length}
+          circles={circles}
+        />
 
-            <div className="qp-info">
-              <h1 className="qp-name">{profile.name}</h1>
-              {profile.bio ? (
-                <p className="qp-bio">{profile.bio}</p>
-              ) : isSelf ? (
-                <p className="qp-bio qp-bio-empty">
-                  Add a short bio so others know what you write about.
+        <ProfileTabs active={tab} onChange={setTab} postCount={posts.length} />
+
+        <div className="mt-6">
+          {tab === 'posts' && (
+            <>
+              {postsError && (
+                <p className="mb-4 text-sm text-amber-200/80">
+                  Couldn’t load posts. Try refreshing the page.
                 </p>
-              ) : null}
+              )}
+              {posts.length === 0 ? (
+                <ProfileEmptyState isSelf={isSelf} />
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {posts.map((p) => (
+                    <ProfilePostCard key={p._id} post={p} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
-              <div className="qp-stats">
+          {tab === 'about' && (
+            <div className="rounded-xl border border-white/[0.06] bg-[#12131a]/80 p-5">
+              <h3 className="text-sm font-semibold text-zinc-100">About</h3>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+                {profile.bio ||
+                  (isSelf
+                    ? 'No bio yet. Use Edit profile to introduce yourself.'
+                    : 'No bio shared yet.')}
+              </p>
+              <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <strong>{profile.followersCount || 0}</strong>
-                  <span>Followers</span>
+                  <dt className="text-xs uppercase tracking-wide text-zinc-600">Posts</dt>
+                  <dd className="mt-0.5 font-medium text-zinc-200">{posts.length}</dd>
                 </div>
                 <div>
-                  <strong>{profile.followingCount || 0}</strong>
-                  <span>Following</span>
+                  <dt className="text-xs uppercase tracking-wide text-zinc-600">Followers</dt>
+                  <dd className="mt-0.5 font-medium text-zinc-200">
+                    {profile.followersCount || 0}
+                  </dd>
                 </div>
                 <div>
-                  <strong>{posts.length}</strong>
-                  <span>Posts</span>
+                  <dt className="text-xs uppercase tracking-wide text-zinc-600">Following</dt>
+                  <dd className="mt-0.5 font-medium text-zinc-200">
+                    {profile.followingCount || 0}
+                  </dd>
                 </div>
-                {joined && (
+                {profile.createdAt && (
                   <div>
-                    <strong>{joined}</strong>
-                    <span>Joined</span>
+                    <dt className="text-xs uppercase tracking-wide text-zinc-600">Joined</dt>
+                    <dd className="mt-0.5 font-medium text-zinc-200">
+                      {new Date(profile.createdAt).toLocaleDateString()}
+                    </dd>
                   </div>
                 )}
-              </div>
-
-              {authorCircles.length > 0 && (
-                <div className="qp-circles-row">
-                  <AvatarCircles
-                    avatarUrls={authorCircles}
-                    numPeople={Math.max(0, (profile.followersCount || 0) - authorCircles.length)}
-                    size={32}
-                  />
-                  <span className="qp-circles-label">
-                    {(profile.followersCount || 0) > 0
-                      ? 'Followers & network'
-                      : 'Scholar on Quilio'}
-                  </span>
+              </dl>
+              {(profile.links || []).length > 0 && (
+                <div className="mt-5">
+                  <h4 className="text-xs uppercase tracking-wide text-zinc-600">Links</h4>
+                  <ul className="mt-2 space-y-1">
+                    {profile.links.map((link) => (
+                      <li key={link}>
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-violet-300 hover:underline"
+                        >
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
-
-            <div className="qp-actions">
-              {isAuthenticated && !isSelf && (
-                <button
-                  type="button"
-                  className={`qp-btn ${following ? 'ghost' : 'primary'}`}
-                  onClick={toggleFollow}
-                >
-                  {following ? 'Following' : 'Follow'}
-                </button>
-              )}
-              {isSelf && (
-                <>
-                  <button type="button" className="qp-btn primary" onClick={() => setEditOpen(true)}>
-                    Edit profile
-                  </button>
-                  <Link to="/dashboard" className="qp-btn ghost">
-                    Dashboard
-                  </Link>
-                  <Link to="/write" className="qp-btn ghost">
-                    Write
-                  </Link>
-                  <button
-                    type="button"
-                    className="qp-btn danger"
-                    onClick={() => {
-                      logout();
-                      navigate('/login');
-                    }}
-                  >
-                    Log out
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="qp-posts">
-          <div className="qp-posts-head">
-            <h2>Published posts</h2>
-            <span className="qp-muted">{posts.length} total</span>
-          </div>
-
-          {posts.length === 0 ? (
-            <div className="qp-empty-card">
-              <p>No published posts yet.</p>
-              {isSelf && (
-                <Link to="/write" className="qp-btn primary">
-                  Write your first post
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="qp-post-grid">
-              {posts.map((p) => {
-                const href = p.slug ? `/post/${p.slug}` : `/post/${p._id}`;
-                const excerpt = (p.excerpt || p.content || '')
-                  .replace(/#{1,6}\s*/g, '')
-                  .replace(/<[^>]+>/g, ' ')
-                  .replace(/\n+/g, ' ')
-                  .trim()
-                  .slice(0, 130);
-                return (
-                  <Link key={p._id} to={href} className="qp-post-card">
-                    {p.coverImageUrl ? (
-                      <div className="qp-post-cover">
-                        <img src={p.coverImageUrl} alt="" loading="lazy" />
-                      </div>
-                    ) : (
-                      <div className="qp-post-cover qp-post-cover-fallback">
-                        <span>{(p.title || 'Q').charAt(0)}</span>
-                      </div>
-                    )}
-                    <div className="qp-post-body">
-                      <h3>{p.title}</h3>
-                      {excerpt && (
-                        <p>
-                          {excerpt}
-                          {excerpt.length >= 130 ? '…' : ''}
-                        </p>
-                      )}
-                      <div className="qp-post-meta">
-                        <span>
-                          {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}
-                        </span>
-                        <span>♥ {p.likesCount || 0}</span>
-                        <span>💬 {p.commentsCount || 0}</span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
           )}
-        </section>
+        </div>
       </div>
 
       {isSelf && (
@@ -323,10 +254,7 @@ export default function Profile() {
             onClose={() => setPickerOpen(false)}
             currentAvatar={profile.avatarUrl || ''}
             userName={profile.name}
-            onSaved={(updated) => {
-              applyUserUpdate(updated);
-              // Re-open edit modal optionally — keep closed after avatar save
-            }}
+            onSaved={applyUserUpdate}
           />
         </>
       )}
