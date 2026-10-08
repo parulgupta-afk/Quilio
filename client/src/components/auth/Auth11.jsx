@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import LoginShowcase from './LoginShowcase';
 
 const GoogleIcon = (props) => (
   <svg viewBox="0 0 24 24" width="1em" height="1em" {...props}>
@@ -130,20 +131,7 @@ export default function Auth11({
 
   return (
     <div className="w-auth11">
-      <div className="w-auth11-hero">
-        <div className="w-auth11-hero-bg" />
-        <div className="w-auth11-hero-inner">
-          <div className="w-auth11-hero-badge">Quilio Scholar</div>
-          <h2 className="w-auth11-hero-title">
-            Move deep.
-            <br />
-            Feel free.
-          </h2>
-          <p className="w-auth11-hero-text">
-            Knowledge untangled. Chat, quiz, and write with AI grounded in your posts.
-          </p>
-        </div>
-      </div>
+      <LoginShowcase />
 
       <div className="w-auth11-form-side">
         <motion.div
