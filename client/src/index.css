@@ -3577,3 +3577,32 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.5; }
   color: #c4b5fd;
   font-weight: 600;
 }
+
+/* ── Article reader (PostDetail) ── */
+.article-reader {
+  max-width: 720px;
+}
+.article-reader .ns-article,
+.article-body {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--ns-text, #e2e2e9);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-bottom: 3rem;
+}
+.article-body h1,
+.article-body h2,
+.article-body h3 {
+  font-family: Newsreader, Georgia, serif;
+  font-weight: 500;
+  color: #f4f4f5;
+  margin: 1.5rem 0 0.75rem;
+  line-height: 1.3;
+}
+.article-reader h1.ns-title,
+.article-reader .ns-title {
+  font-family: Newsreader, Georgia, serif;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}

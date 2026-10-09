@@ -96,7 +96,7 @@ export default function PostDetail() {
   if (error || !post) {
     return (
       <Layout>
-        <div className="ns-page" style={{ textAlign: 'center', paddingTop: '5rem' }}>
+        <div className="ns-page article-reader" style={{ textAlign: 'center', paddingTop: '5rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: 40, color: '#ffb4ab', display: 'block', marginBottom: 12 }}>error</span>
           <p style={{ color: '#ffb4ab', marginBottom: 16, fontSize: 15 }}>{error || 'Post not found'}</p>
           <Link to="/home" className="ns-btn ns-btn-ghost">
@@ -134,7 +134,7 @@ export default function PostDetail() {
         </Link>
       </div>
 
-      <div className="ns-page">
+      <div className="ns-page article-reader">
         {/* Tags */}
         {post.tags?.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
@@ -217,7 +217,7 @@ export default function PostDetail() {
         </div>
 
         {/* Article body */}
-        <article className="ns-article" style={{ marginBottom: 48 }}>
+        <article className="ns-article article-body">
           {post.content}
         </article>
 
