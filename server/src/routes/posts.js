@@ -10,12 +10,13 @@ const {
   deletePost,
 } = require('../controllers/postController');
 const { protect } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validate');
 
 // Public
 router.get('/', getPosts);
 
 // Specific routes BEFORE :slug
-router.post('/', protect, createPost);
+router.post('/', protect, validateBody({ title: 'string', content: 'string' }), createPost);
 router.get('/me/all', protect, getMyPosts);
 router.get('/author/:userId', getPostsByAuthor);
 

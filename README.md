@@ -86,3 +86,7 @@ Built as a portfolio-grade full-stack + AI project.
 
 
 ## live demo
+
+## Engineering status
+
+See `PROJECT_AUDIT.md` (Phase 0) and `PHASES_1_4_PROGRESS.md` for the current implementation snapshot: validation middleware, auth rate limits, production demo-login gate, text search index, and RAG citation UI.

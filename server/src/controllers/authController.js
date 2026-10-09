@@ -248,6 +248,12 @@ const googleLogin = async (req, res) => {
 // @access  Public
 const demoLogin = async (req, res) => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        message: 'Demo login is disabled in production.',
+        code: 'DEMO_DISABLED',
+      });
+    }
     const email = 'aria@quilio.app';
     const password = 'demo1234';
     let user = await User.findOne({ email }).select('+passwordHash');

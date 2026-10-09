@@ -29,6 +29,16 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// Stricter limit for auth endpoints (brute-force resistance)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { message: 'Too many auth attempts. Try again later.', code: 'RATE_LIMIT' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth', authLimiter);
+
 app.get('/api/health', (req, res) => {
   const mongoose = require('mongoose');
   const dbState = mongoose.connection.readyState;
@@ -59,9 +69,12 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).json({
-    message: err.message || 'Internal Server Error',
+  console.error(err.stack || err.message);
+  const status = err.statusCode || err.status || 500;
+  const isProd = process.env.NODE_ENV === 'production';
+  res.status(status).json({
+    message: status === 500 && isProd ? 'Internal Server Error' : (err.message || 'Internal Server Error'),
+    code: err.code || (status === 500 ? 'SERVER_ERROR' : undefined),
   });
 });
 

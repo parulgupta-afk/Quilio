@@ -79,4 +79,7 @@ postSchema.pre('save', function (next) {
   next();
 });
 
+// Text search support for title/excerpt/tags
+postSchema.index({ title: 'text', excerpt: 'text', tags: 'text' });
+
 module.exports = mongoose.model('Post', postSchema);

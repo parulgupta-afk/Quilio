@@ -134,9 +134,10 @@ Assistant:`;
 
     return {
       answer,
+      grounded: true,
       sources: contextChunks.map((c, i) => ({
         index: i + 1,
-        text: c.chunkText.substring(0, 150) + (c.chunkText.length > 150 ? '...' : ''),
+        text: c.chunkText.substring(0, 280) + (c.chunkText.length > 280 ? '…' : ''),
         chunkIndex: c.chunkIndex,
       })),
     };

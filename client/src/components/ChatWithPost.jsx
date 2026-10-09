@@ -181,17 +181,12 @@ export default function ChatWithPost({ postId }) {
               )}
               {msg.content}
               {msg.sources?.length > 0 && (
-                <div
-                  style={{
-                    marginTop: 8,
-                    paddingTop: 8,
-                    borderTop: '1px solid rgba(255,255,255,0.08)',
-                  }}
-                >
+                <div className="chat-sources">
+                  <div className="chat-sources-label">Sources from this article</div>
                   {msg.sources.map((s) => (
-                    <div key={s.index} style={{ fontSize: 11, color: '#8B93A7' }}>
-                      [{s.index}] {s.text}
-                    </div>
+                    <blockquote key={s.index} className="chat-source-item">
+                      <span className="chat-source-idx">[{s.index}]</span> {s.text}
+                    </blockquote>
                   ))}
                 </div>
               )}
