@@ -5,13 +5,14 @@ server/node_modules/
 
 # Environment variables - NEVER commit these
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+client/.env
 server/.env
 
-# Build output
+# Build outputs
+dist/
+build/
 client/dist/
 client/build/
 
@@ -25,9 +26,9 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE & Editor files
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Lock files (optional - keeping them out for now)
-package-lock.json
