@@ -3643,3 +3643,212 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.5; }
 @media (max-width: 880px) { .q-intro-main { padding-top: 20px; }.q-intro-hero { grid-template-columns: 1fr; gap: 10px; }.q-intro-copy { text-align: center; padding-bottom: 0; }.q-intro-eyebrow, .q-intro-actions, .q-intro-proof { justify-content: center; }.q-intro-lede { margin-left: auto; margin-right: auto; }.q-intro-visual { min-height: 430px; }.q-intro-strip { margin-top: 0; } }
 @media (max-width: 600px) { .q-intro-header, .q-intro-main, .q-intro-footer { width: min(100% - 36px, 520px); }.q-intro-header { padding: 18px 0; }.q-intro-nav > a:first-child { display: none; }.q-intro-copy h1 { font-size: clamp(3.8rem, 17vw, 5.5rem); }.q-intro-lede { font-size: .9rem; }.q-intro-actions { flex-direction: column; gap: 17px; }.q-intro-visual { min-height: 360px; transform: scale(.84); margin: -20px 0; }.q-intro-strip { grid-template-columns: 1fr; gap: 17px; }.q-intro-strip > div { grid-template-columns: 30px 1fr; }.q-intro-footer { flex-direction: column; gap: 8px; }.q-intro-footer span:last-child { display: none; }.q-node-read { left: 0; }.q-node-ask { right: 0; }.q-intro-annotation { display: none; } }
 @media (prefers-reduced-motion: reduce) { .q-intro *, .q-intro *::before, .q-intro *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+
+/* ══════════════════════════════════════════════════════════
+   UI FIXES — Welcome centering + LoginShowcase stage height
+   ══════════════════════════════════════════════════════════ */
+
+/* Auth split: form column always usable */
+.w-auth11 {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+@media (min-width: 1024px) {
+  .w-auth11 {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+.w-auth11-form-side {
+  width: 100%;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 5;
+  background: #050505;
+}
+@media (min-width: 1024px) {
+  .w-auth11-form-side {
+    width: 50%;
+    max-width: 50%;
+    padding: 2rem 2.5rem;
+  }
+}
+.w-auth11-form-box {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Showcase left panel — fixed stage so absolute slides don't collapse */
+.qs-showcase {
+  display: none;
+  position: relative;
+  width: 50%;
+  min-height: 100vh;
+  flex-direction: column;
+  padding: 1.75rem 1.75rem 1.25rem;
+  overflow: hidden;
+  isolation: isolate;
+  background: #07080c;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-sizing: border-box;
+}
+@media (min-width: 1024px) {
+  .qs-showcase {
+    display: flex;
+  }
+}
+.qs-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 380px;
+  width: 100%;
+}
+.qs-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(16px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  pointer-events: none;
+  padding-right: 0.5rem;
+}
+.qs-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  z-index: 1;
+}
+.qs-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+}
+.qs-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e4e4e7;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.qs-arrow:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.qs-dots {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.qs-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+.qs-dot.is-active {
+  width: 22px;
+  background: #a5b4fc;
+}
+.qs-footnote {
+  position: relative;
+  z-index: 1;
+  margin: 0.85rem 0 0;
+  text-align: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: #52525b;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qs-slide {
+    transition: none;
+  }
+  .qs-float,
+  .qs-doc-card {
+    animation: none !important;
+  }
+}
+
+/* Welcome: prevent horizontal overflow + balanced column */
+.q-intro {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+.q-intro-header,
+.q-intro-main,
+.q-intro-footer {
+  width: min(1100px, calc(100% - 48px));
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+.q-intro-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 80px);
+}
+@media (max-width: 880px) {
+  .q-intro-hero {
+    grid-template-columns: 1fr;
+  }
+}
+.q-intro-copy h1 {
+  font-size: clamp(2.75rem, 6.5vw, 5.5rem) !important;
+  line-height: 0.95 !important;
+  max-width: 14ch;
+  overflow-wrap: break-word;
+}
+@media (max-width: 880px) {
+  .q-intro-copy {
+    text-align: center;
+  }
+  .q-intro-copy h1 {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .q-intro-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+.q-intro-how {
+  display: inline-block;
+  margin-top: 1rem;
+}
+.q-intro-visual {
+  position: relative;
+  min-height: 420px;
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
