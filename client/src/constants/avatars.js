@@ -14,7 +14,6 @@ export const AVATAR_OPTIONS = [
   { id: 'avatar-12', name: 'Cosmic Violet', label: 'Avatar 12 · Cosmic Violet (Royal Purple)', url: '/avatars/avatar-12.svg', theme: 'purple' },
 ];
 
-export const PRESET_AVATARS = AVATAR_OPTIONS.map((a) => a.url);
 
 export function getInitials(name = '') {
   const parts = String(name).trim().split(/\s+/).filter(Boolean);

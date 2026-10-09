@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../services/api';
-import { AVATAR_OPTIONS, PRESET_AVATARS } from '../constants/avatars';
+import { AVATAR_OPTIONS } from '../constants/avatars';
 import UserAvatar from './UserAvatar';
 
 const MAX_BYTES = 5 * 1024 * 1024;

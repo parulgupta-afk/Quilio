@@ -1,7 +1,7 @@
 const Post = require('../models/Post');
 const EmbeddingChunk = require('../models/EmbeddingChunk');
 const Follow = require('../models/Follow');
-const { generateEmbedding, cosineSimilarity } = require('../services/aiService');
+const { cosineSimilarity } = require('../services/aiService');
 
 /**
  * Average the embeddings of all chunks of a post to get a post-level vector

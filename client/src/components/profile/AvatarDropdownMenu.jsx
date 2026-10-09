@@ -1,22 +1,36 @@
-import { useState, useRef, useEffect } from 'react';
-import { AVATAR_OPTIONS, PRESET_AVATARS } from '../../constants/avatars';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { AVATAR_OPTIONS } from '../../constants/avatars';
 import UserAvatar from '../UserAvatar';
 import api from '../../services/api';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+/**
+ * Avatar chooser dropdown — works controlled (open + onToggle) or uncontrolled.
+ */
 export default function AvatarDropdownMenu({
   currentAvatar = '',
   userName = '',
   onSaved,
-  open,
+  open: openProp,
   onToggle,
-  onClose,
 }) {
+  const isControlled = openProp !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
-  const isOpen = open !== undefined ? open : internalOpen;
-  const setIsOpen = onToggle || ((val) => setInternalOpen(val));
+  const isOpen = isControlled ? openProp : internalOpen;
+
+  const setOpen = useCallback(
+    (next) => {
+      const value = typeof next === 'function' ? next(isOpen) : next;
+      if (isControlled) onToggle?.(value);
+      else setInternalOpen(value);
+    },
+    [isControlled, onToggle, isOpen]
+  );
+
+  const close = useCallback(() => setOpen(false), [setOpen]);
+  const toggle = useCallback(() => setOpen(!isOpen), [setOpen, isOpen]);
 
   const [selected, setSelected] = useState(currentAvatar || '');
   const [previewLocal, setPreviewLocal] = useState('');
@@ -25,100 +39,81 @@ export default function AvatarDropdownMenu({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const menuRef = useRef(null);
+  const rootRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Sync with current avatar when opened
   useEffect(() => {
-    if (isOpen) {
-      setSelected(currentAvatar || '');
-      setPreviewLocal('');
-      setFile(null);
-      setError('');
-      setSuccess(false);
-    }
+    if (!isOpen) return;
+    setSelected(currentAvatar || '');
+    setPreviewLocal('');
+    setFile(null);
+    setError('');
+    setSuccess(false);
   }, [isOpen, currentAvatar]);
 
-  // Clean up blob URL on unmount or change
   useEffect(() => {
     return () => {
       if (previewLocal) URL.revokeObjectURL(previewLocal);
     };
   }, [previewLocal]);
 
-  // Close when clicking outside
+  // Outside click + Escape — always closes controlled/uncontrolled
   useEffect(() => {
-    if (!isOpen) return;
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        if (onClose) onClose();
-        else setInternalOpen(false);
-      }
+    if (!isOpen) return undefined;
+    const onPointer = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) close();
     };
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (onClose) onClose();
-        else setInternalOpen(false);
-      }
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, close]);
 
-  const handlePickFile = (e) => {
+  const pickFile = (e) => {
     const f = e.target.files?.[0];
     e.target.value = '';
     if (!f) return;
     if (!ALLOWED.includes(f.type)) {
-      setError('Supported formats: JPEG, PNG, WebP, or GIF.');
+      setError('Use JPEG, PNG, WebP, or GIF.');
       return;
     }
     if (f.size > MAX_BYTES) {
-      setError('Image file must be under 5MB.');
+      setError('Image must be under 5MB.');
       return;
     }
     setError('');
     if (previewLocal) URL.revokeObjectURL(previewLocal);
-    const url = URL.createObjectURL(f);
-    setPreviewLocal(url);
+    setPreviewLocal(URL.createObjectURL(f));
     setFile(f);
     setSelected('__custom__');
   };
 
-  const handleDropdownChange = (val) => {
+  const selectPreset = (url) => {
     setError('');
-    if (val === '__custom__') {
-      fileInputRef.current?.click();
-      return;
-    }
-    if (val === '__initials__') {
-      setFile(null);
-      if (previewLocal) URL.revokeObjectURL(previewLocal);
-      setPreviewLocal('');
-      setSelected('');
-      return;
-    }
-    setFile(null);
+    setSuccess(false);
     if (previewLocal) URL.revokeObjectURL(previewLocal);
     setPreviewLocal('');
-    setSelected(val);
+    setFile(null);
+    setSelected(url);
   };
 
-  const handleSelectPreset = (url) => {
-    setFile(null);
+  const clearToInitials = () => {
+    setError('');
     if (previewLocal) URL.revokeObjectURL(previewLocal);
     setPreviewLocal('');
-    setSelected(url);
-    setError('');
+    setFile(null);
+    setSelected('');
   };
 
   const handleSave = async () => {
     setSaving(true);
     setError('');
+    setSuccess(false);
     try {
       let avatarUrl = selected === '__custom__' ? '' : selected;
 
@@ -128,7 +123,7 @@ export default function AvatarDropdownMenu({
         const { data } = await api.post('/upload', form, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        if (!data?.url) throw new Error('Upload returned no URL');
+        if (!data?.url) throw new Error('Upload failed');
         avatarUrl = data.url;
       }
 
@@ -138,220 +133,92 @@ export default function AvatarDropdownMenu({
 
       setSuccess(true);
       onSaved?.(updated);
-      setTimeout(() => {
-        if (onClose) onClose();
-        else setInternalOpen(false);
-      }, 400);
+      setTimeout(() => close(), 350);
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        'Could not save avatar. Please try again.';
-      setError(msg);
+      setError(
+        err.response?.data?.message || err.message || 'Could not save avatar.'
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const displaySrc = previewLocal || (selected !== '__custom__' ? selected : '');
-  const activeOption = AVATAR_OPTIONS.find((a) => a.url === selected);
+  const displaySrc =
+    previewLocal || (selected && selected !== '__custom__' ? selected : '');
 
   return (
-    <div className="relative inline-block text-left" ref={menuRef}>
-      {/* Dropdown Trigger Button */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="group inline-flex items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300 transition-all hover:border-violet-400/40 hover:bg-violet-500/20 active:scale-95"
-        aria-expanded={isOpen}
-        aria-haspopup="true"
-        title="Choose avatar dropdown"
-      >
-        <span className="material-symbols-outlined text-[15px] transition-transform group-hover:rotate-12">
+    <div className="av-dd" ref={rootRef}>
+      <button type="button" className="av-dd-trigger" onClick={toggle} aria-expanded={isOpen}>
+        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
           face
         </span>
-        <span>Choose Avatar</span>
-        <svg
-          className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180 text-violet-200' : 'text-violet-400'}`}
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-            clipRule="evenodd"
-          />
-        </svg>
+        Choose avatar
+        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+          {isOpen ? 'expand_less' : 'expand_more'}
+        </span>
       </button>
 
-      {/* Dropdown Menu Overlay / Card */}
       {isOpen && (
-        <div
-          className="absolute left-1/2 z-50 mt-2 w-[340px] -translate-x-1/2 sm:w-[390px] rounded-2xl border border-white/10 bg-[#12131c]/95 p-4 shadow-2xl shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
-          role="menu"
-          aria-orientation="vertical"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/20 text-xs text-violet-300">
-                ✦
-              </span>
-              <div>
-                <h4 className="text-sm font-semibold text-zinc-100">Choose Avatar</h4>
-                <p className="text-[11px] text-zinc-400">Select via dropdown menu or grid</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => (onClose ? onClose() : setInternalOpen(false))}
-              className="rounded-full p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Live Preview Row */}
-          <div className="my-3.5 flex items-center gap-3.5 rounded-xl border border-white/[0.06] bg-black/30 p-2.5">
-            <div className="rounded-full p-1 bg-gradient-to-tr from-violet-500 to-indigo-500">
-              <UserAvatar src={displaySrc} name={userName} size={50} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-zinc-200">
-                {activeOption ? activeOption.name : file ? file.name : displaySrc ? 'Custom Avatar' : 'Initials Default'}
-              </p>
-              <p className="text-[11px] text-zinc-400">
-                {activeOption?.description || (displaySrc ? 'Selected photo preview' : 'Using name initials')}
-              </p>
+        <div className="av-dd-panel" role="dialog" aria-label="Choose avatar">
+          <div className="av-dd-preview">
+            <UserAvatar src={displaySrc} name={userName} size={56} />
+            <div>
+              <strong>Preview</strong>
+              <p>Select a preset or upload. Save to apply.</p>
             </div>
           </div>
 
-          {/* Dropdown Menu Selector */}
-          <div className="space-y-1.5">
-            <label htmlFor="avatar-dropdown-select" className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
-              <span>Select from Dropdown:</span>
-              <span className="text-[10px] text-violet-400 font-normal">12 Curated Avatars</span>
-            </label>
-            <div className="relative">
-              <select
-                id="avatar-dropdown-select"
-                value={file ? '__custom__' : selected === '' ? '__initials__' : selected}
-                onChange={(e) => handleDropdownChange(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-white/10 bg-[#0c0d14] px-3.5 py-2.5 pr-8 text-xs font-medium text-zinc-100 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 cursor-pointer"
-              >
-                <optgroup label="Preset Avatars">
-                  {AVATAR_OPTIONS.map((a) => (
-                    <option key={a.id} value={a.url}>
-                      {a.label}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Other Options">
-                  <option value="__custom__">📷 Upload Custom Image File...</option>
-                  <option value="__initials__">🔤 Default Initials (No Photo)</option>
-                </optgroup>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.75 9.25a.75.75 0 011.1 1.02L10 16.148l2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.05-1.02z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
+          <div className="av-dd-grid">
+            {AVATAR_OPTIONS.map((a) => {
+              const active = !previewLocal && selected === a.url;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  className={`av-dd-opt ${active ? 'is-active' : ''}`}
+                  onClick={() => selectPreset(a.url)}
+                  title={a.name}
+                >
+                  <img src={a.url} alt={a.name} loading="lazy" />
+                </button>
+              );
+            })}
           </div>
 
-          {/* Quick Grid Selector */}
-          <div className="mt-3">
-            <span className="block mb-2 text-[11px] font-medium text-zinc-400">
-              Or click to pick an avatar:
-            </span>
-            <div className="grid grid-cols-6 gap-2">
-              {AVATAR_OPTIONS.map((a) => {
-                const isSelected = !file && selected === a.url;
-                return (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => handleSelectPreset(a.url)}
-                    className={`relative rounded-full p-0.5 transition-all duration-150 ${
-                      isSelected
-                        ? 'ring-2 ring-violet-400 ring-offset-2 ring-offset-[#12131c] scale-110 shadow-md shadow-violet-500/30'
-                        : 'opacity-75 hover:opacity-100 hover:scale-105'
-                    }`}
-                    title={a.name}
-                  >
-                    <img
-                      src={a.url}
-                      alt={a.name}
-                      className="h-10 w-10 rounded-full object-cover"
-                      loading="lazy"
-                    />
-                    {isSelected && (
-                      <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-500 text-[8px] text-white font-bold ring-1 ring-[#12131c]">
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Upload Custom File */}
-          <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-3">
+          <div className="av-dd-actions-row">
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
               hidden
-              onChange={handlePickFile}
+              onChange={pickFile}
             />
             <button
               type="button"
+              className="av-dd-btn ghost"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-violet-300 transition"
             >
-              <span className="material-symbols-outlined text-[14px]">upload_file</span>
-              <span>{file ? 'Change file' : 'Upload custom image'}</span>
+              Upload image
             </button>
-
-            <button
-              type="button"
-              onClick={() => handleDropdownChange('__initials__')}
-              className="text-[11px] text-zinc-500 hover:text-zinc-300 transition"
-            >
-              Reset to initials
+            <button type="button" className="av-dd-btn ghost" onClick={clearToInitials}>
+              Use initials
             </button>
           </div>
 
-          {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
-          {success && <p className="mt-2 text-xs text-emerald-400">Avatar updated successfully!</p>}
+          {error && <p className="av-dd-error">{error}</p>}
+          {success && <p className="av-dd-ok">Saved</p>}
 
-          {/* Footer Actions */}
-          <div className="mt-4 flex items-center justify-end gap-2 border-t border-white/[0.08] pt-3">
-            <button
-              type="button"
-              onClick={() => (onClose ? onClose() : setInternalOpen(false))}
-              disabled={saving}
-              className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-zinc-400 hover:bg-white/5 hover:text-zinc-200 transition"
-            >
+          <div className="av-dd-foot">
+            <button type="button" className="av-dd-btn ghost" onClick={close} disabled={saving}>
               Cancel
             </button>
             <button
               type="button"
+              className="av-dd-btn primary"
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:opacity-50"
             >
-              {saving ? (
-                <>
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent" />
-                  Saving...
-                </>
-              ) : (
-                'Save Avatar'
-              )}
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </div>
