@@ -29,6 +29,64 @@ export default function CreatePost() {
   const [aiLoading, setAiLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const chatEnd = useRef(null);
+  const textareaRef = useRef(null);
+
+  const applyFormatting = (format) => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || 0;
+    const selectedText = content.substring(start, end);
+
+    let before = content.substring(0, start);
+    let after = content.substring(end);
+    let inserted = '';
+    let cursorOffset = 0;
+
+    switch (format) {
+      case 'format_bold':
+        inserted = selectedText ? `**${selectedText}**` : '**bold text**';
+        cursorOffset = selectedText ? inserted.length : 2;
+        break;
+      case 'format_italic':
+        inserted = selectedText ? `*${selectedText}*` : '*italic text*';
+        cursorOffset = selectedText ? inserted.length : 1;
+        break;
+      case 'title':
+        inserted = selectedText ? `\n### ${selectedText}\n` : '\n### Heading\n';
+        cursorOffset = inserted.length;
+        break;
+      case 'format_quote':
+        inserted = selectedText ? `\n> ${selectedText}\n` : '\n> Quote\n';
+        cursorOffset = inserted.length;
+        break;
+      case 'code':
+        if (selectedText.includes('\n')) {
+          inserted = `\n\`\`\`\n${selectedText}\n\`\`\`\n`;
+        } else {
+          inserted = selectedText ? `\`${selectedText}\`` : '`code`';
+        }
+        cursorOffset = inserted.length;
+        break;
+      case 'format_list_bulleted':
+        inserted = selectedText ? `\n- ${selectedText}\n` : '\n- List item\n';
+        cursorOffset = inserted.length;
+        break;
+      case 'link':
+        inserted = selectedText ? `[${selectedText}](url)` : '[link text](https://)';
+        cursorOffset = inserted.length;
+        break;
+      default:
+        return;
+    }
+
+    const nextContent = before + inserted + after;
+    setContent(nextContent);
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + cursorOffset, start + cursorOffset);
+    }, 0);
+  };
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -135,7 +193,13 @@ export default function CreatePost() {
                   { icon: 'format_list_bulleted', label: 'List' },
                   { icon: 'link', label: 'Link' },
                 ].map(t => (
-                  <button key={t.icon} className="ns-editor-tool" title={t.label} type="button">
+                  <button
+                    key={t.icon}
+                    className="ns-editor-tool"
+                    title={t.label}
+                    type="button"
+                    onClick={() => applyFormatting(t.icon)}
+                  >
                     <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{t.icon}</span>
                   </button>
                 ))}
@@ -200,6 +264,7 @@ export default function CreatePost() {
 
               {/* Content textarea */}
               <textarea
+                ref={textareaRef}
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 required

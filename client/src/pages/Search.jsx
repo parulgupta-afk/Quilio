@@ -12,7 +12,7 @@ export default function Search() {
   const [searched, setSearched] = useState(false);
 
   const performSearch = useCallback(async (q) => {
-    if (!q || q.trim().length < 2) return;
+    if (!q || !q.trim()) return;
     setLoading(true);
     setSearched(true);
     try {
@@ -27,7 +27,7 @@ export default function Search() {
   }, []);
 
   useEffect(() => {
-    if (qParam) {
+    if (qParam && qParam.trim()) {
       setQuery(qParam);
       performSearch(qParam);
     }
@@ -35,7 +35,7 @@ export default function Search() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (query.trim().length < 2) return;
+    if (!query || !query.trim()) return;
     setSearchParams({ q: query.trim() });
     performSearch(query.trim());
   };

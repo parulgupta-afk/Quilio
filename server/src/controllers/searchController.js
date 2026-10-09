@@ -33,7 +33,7 @@ const search = async (req, res) => {
       const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       posts = await Post.find({
         status: 'published',
-        $or: [{ title: regex }, { tags: regex }, { excerpt: regex }],
+        $or: [{ title: regex }, { tags: regex }, { excerpt: regex }, { content: regex }],
       })
         .populate('author', 'name avatarUrl')
         .sort({ createdAt: -1 })
