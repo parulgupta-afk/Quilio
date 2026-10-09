@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Follow = require('../models/Follow');
 
 // @desc    Get user profile by ID
 // @route   GET /api/users/:id
@@ -13,7 +14,19 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.status(200).json(user);
+    let isFollowing = false;
+    if (req.user) {
+      const followExists = await Follow.exists({
+        follower: req.user._id,
+        following: user._id,
+      });
+      isFollowing = !!followExists;
+    }
+
+    const userObj = user.toObject();
+    userObj.isFollowing = isFollowing;
+
+    res.status(200).json(userObj);
   } catch (error) {
     console.error('Get profile error:', error.message);
     res.status(500).json({ message: 'Server error' });

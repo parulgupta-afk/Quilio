@@ -91,7 +91,7 @@ export default function CreatePost() {
               {status === 'published' ? 'cloud_done' : 'edit_document'}
             </span>
             <span style={{ fontWeight: 500, color: status === 'published' ? '#22c55e' : '#c0c1ff' }}>
-              {status === 'published' ? 'Publishing' : 'Draft'}
+              {status === 'published' ? 'Published' : 'Draft'}
             </span>
             <span>·</span>
             <span>{wordCount} words</span>

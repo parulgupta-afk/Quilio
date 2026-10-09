@@ -9,11 +9,11 @@ const {
   updatePost,
   deletePost,
 } = require('../controllers/postController');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validate');
 
 // Public
-router.get('/', getPosts);
+router.get('/', optionalAuth, getPosts);
 
 // Specific routes BEFORE :slug
 router.post('/', protect, validateBody({ title: 'string', content: 'string' }), createPost);
@@ -21,7 +21,7 @@ router.get('/me/all', protect, getMyPosts);
 router.get('/author/:userId', getPostsByAuthor);
 
 // Parametric last
-router.get('/:slug', getPostBySlug);
+router.get('/:slug', optionalAuth, getPostBySlug);
 router.put('/:id', protect, updatePost);
 router.delete('/:id', protect, deletePost);
 

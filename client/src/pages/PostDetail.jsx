@@ -26,6 +26,8 @@ export default function PostDetail() {
       try {
         const { data } = await api.get(`/posts/${encodeURIComponent(slug)}`);
         setPost(data);
+        if (data.isLiked !== undefined) setLiked(!!data.isLiked);
+        if (data.isBookmarked !== undefined) setBookmarked(!!data.isBookmarked);
         try {
           const c = await api.get(`/social/comments/${data._id}`);
           setComments(Array.isArray(c.data) ? c.data : c.data?.comments || []);
@@ -51,7 +53,14 @@ export default function PostDetail() {
         setPost(p => ({ ...p, likesCount: (p.likesCount || 0) + 1 }));
         setLiked(true);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      if (e.response?.data?.message === 'Already liked') {
+        setLiked(true);
+      } else if (e.response?.data?.message === 'Post not liked') {
+        setLiked(false);
+      }
+    }
   };
 
   const handleBookmark = async () => {
@@ -64,7 +73,14 @@ export default function PostDetail() {
         await api.post(`/social/bookmark/${post._id}`);
         setBookmarked(true);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      if (e.response?.data?.message === 'Already bookmarked') {
+        setBookmarked(true);
+      } else if (e.response?.data?.message === 'Bookmark not found') {
+        setBookmarked(false);
+      }
+    }
   };
 
   const handleComment = async (e) => {
@@ -215,6 +231,17 @@ export default function PostDetail() {
             Learn This
           </Link>
         </div>
+
+        {/* Cover image */}
+        {post.coverImageUrl && (
+          <div style={{ marginBottom: 28, borderRadius: 16, overflow: 'hidden', maxHeight: 440, border: '1px solid rgba(255,255,255,0.08)' }}>
+            <img
+              src={post.coverImageUrl}
+              alt={post.title}
+              style={{ width: '100%', maxHeight: 440, objectFit: 'cover', display: 'block' }}
+            />
+          </div>
+        )}
 
         {/* Article body */}
         <article className="ns-article article-body">

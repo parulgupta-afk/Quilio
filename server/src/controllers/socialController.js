@@ -29,7 +29,7 @@ const followUser = async (req, res) => {
     });
 
     if (existing) {
-      return res.status(400).json({ message: 'Already following this user' });
+      return res.status(200).json({ message: 'Already following this user', following: true });
     }
 
     await Follow.create({
@@ -50,7 +50,7 @@ const followUser = async (req, res) => {
       io,
     });
 
-    res.status(200).json({ message: 'Followed successfully' });
+    res.status(200).json({ message: 'Followed successfully', following: true });
   } catch (error) {
     console.error('Follow error:', error.message);
     res.status(500).json({ message: 'Server error' });
@@ -69,13 +69,13 @@ const unfollowUser = async (req, res) => {
     });
 
     if (!follow) {
-      return res.status(400).json({ message: 'You are not following this user' });
+      return res.status(200).json({ message: 'Not following this user', following: false });
     }
 
     await User.findByIdAndUpdate(req.user._id, { $inc: { followingCount: -1 } });
     await User.findByIdAndUpdate(targetUserId, { $inc: { followersCount: -1 } });
 
-    res.status(200).json({ message: 'Unfollowed successfully' });
+    res.status(200).json({ message: 'Unfollowed successfully', following: false });
   } catch (error) {
     console.error('Unfollow error:', error.message);
     res.status(500).json({ message: 'Server error' });
@@ -97,7 +97,7 @@ const likePost = async (req, res) => {
 
     const existing = await Like.findOne({ user: req.user._id, post: postId });
     if (existing) {
-      return res.status(400).json({ message: 'Already liked' });
+      return res.status(200).json({ message: 'Already liked', liked: true });
     }
 
     await Like.create({ user: req.user._id, post: postId });
@@ -113,7 +113,7 @@ const likePost = async (req, res) => {
       io,
     });
 
-    res.status(200).json({ message: 'Post liked' });
+    res.status(200).json({ message: 'Post liked', liked: true });
   } catch (error) {
     console.error('Like error:', error.message);
     res.status(500).json({ message: 'Server error' });
@@ -132,12 +132,12 @@ const unlikePost = async (req, res) => {
     });
 
     if (!like) {
-      return res.status(400).json({ message: 'You have not liked this post' });
+      return res.status(200).json({ message: 'Post not liked', liked: false });
     }
 
     await Post.findByIdAndUpdate(postId, { $inc: { likesCount: -1 } });
 
-    res.status(200).json({ message: 'Post unliked' });
+    res.status(200).json({ message: 'Post unliked', liked: false });
   } catch (error) {
     console.error('Unlike error:', error.message);
     res.status(500).json({ message: 'Server error' });
@@ -162,12 +162,12 @@ const bookmarkPost = async (req, res) => {
       post: postId,
     });
     if (existing) {
-      return res.status(400).json({ message: 'Already bookmarked' });
+      return res.status(200).json({ message: 'Already bookmarked', bookmarked: true });
     }
 
     await Bookmark.create({ user: req.user._id, post: postId });
 
-    res.status(200).json({ message: 'Post bookmarked' });
+    res.status(200).json({ message: 'Post bookmarked', bookmarked: true });
   } catch (error) {
     console.error('Bookmark error:', error.message);
     res.status(500).json({ message: 'Server error' });
@@ -186,10 +186,10 @@ const removeBookmark = async (req, res) => {
     });
 
     if (!bookmark) {
-      return res.status(400).json({ message: 'Bookmark not found' });
+      return res.status(200).json({ message: 'Bookmark not found', bookmarked: false });
     }
 
-    res.status(200).json({ message: 'Bookmark removed' });
+    res.status(200).json({ message: 'Bookmark removed', bookmarked: false });
   } catch (error) {
     console.error('Remove bookmark error:', error.message);
     res.status(500).json({ message: 'Server error' });

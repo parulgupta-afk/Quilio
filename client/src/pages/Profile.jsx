@@ -33,6 +33,9 @@ export default function Profile() {
         const { data } = await api.get(`/users/${id}`);
         if (!alive) return;
         setProfile(data);
+        if (data.isFollowing !== undefined) {
+          setFollowing(!!data.isFollowing);
+        }
         try {
           const postsRes = await api.get(`/posts/author/${id}`);
           if (!alive) return;
@@ -74,6 +77,11 @@ export default function Profile() {
       }
     } catch (e) {
       console.error(e);
+      if (e.response?.data?.message === 'Already following this user') {
+        setFollowing(true);
+      } else if (e.response?.data?.message === 'Not following this user') {
+        setFollowing(false);
+      }
     }
   };
 

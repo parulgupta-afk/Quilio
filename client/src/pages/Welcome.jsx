@@ -339,7 +339,7 @@ export default function Welcome() {
         >
           {/* Primary CTA */}
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate(isAuthenticated ? '/home' : '/login')}
             style={{
               width: '100%', padding: '14px 24px', borderRadius: 12,
               background: 'linear-gradient(135deg, #4f46e5, #6366F1, #7c3aed)',

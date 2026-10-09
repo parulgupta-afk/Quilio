@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import UserAvatar from '../UserAvatar';
@@ -7,8 +7,13 @@ import { postHref, readingMinutes, cleanExcerpt, categoryLabel } from './utils';
 
 export default function KnowledgePostCard({ post, variant = 'default' }) {
   const { isAuthenticated } = useAuthStore();
-  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(!!post.isBookmarked);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setBookmarked(!!post.isBookmarked);
+  }, [post.isBookmarked]);
+
   const href = postHref(post);
   const mins = readingMinutes(post);
   const excerpt = cleanExcerpt(post, variant === 'featured' ? 110 : 140);

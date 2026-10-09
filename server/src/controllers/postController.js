@@ -1,4 +1,6 @@
 const Post = require('../models/Post');
+const Like = require('../models/Like');
+const Bookmark = require('../models/Bookmark');
 const { processPostEmbeddings } = require('../services/embeddingPipeline');
 
 function makeSlug(title) {
@@ -65,8 +67,25 @@ const getPosts = async (req, res) => {
 
     const total = await Post.countDocuments({ status: 'published' });
 
+    let finalPosts = posts;
+    if (req.user && posts.length > 0) {
+      const postIds = posts.map((p) => p._id);
+      const [userLikes, userBookmarks] = await Promise.all([
+        Like.find({ user: req.user._id, post: { $in: postIds } }).select('post'),
+        Bookmark.find({ user: req.user._id, post: { $in: postIds } }).select('post'),
+      ]);
+      const likedSet = new Set(userLikes.map((l) => l.post.toString()));
+      const bookmarkedSet = new Set(userBookmarks.map((b) => b.post.toString()));
+      finalPosts = posts.map((p) => {
+        const obj = p.toObject();
+        obj.isLiked = likedSet.has(p._id.toString());
+        obj.isBookmarked = bookmarkedSet.has(p._id.toString());
+        return obj;
+      });
+    }
+
     res.status(200).json({
-      posts,
+      posts: finalPosts,
       page,
       pages: Math.ceil(total / limit) || 1,
       total,
@@ -103,7 +122,22 @@ const getPostBySlug = async (req, res) => {
     post.viewsCount = (post.viewsCount || 0) + 1;
     await post.save();
 
-    res.status(200).json(post);
+    let isLiked = false;
+    let isBookmarked = false;
+    if (req.user) {
+      const [likeExists, bookmarkExists] = await Promise.all([
+        Like.exists({ user: req.user._id, post: post._id }),
+        Bookmark.exists({ user: req.user._id, post: post._id }),
+      ]);
+      isLiked = !!likeExists;
+      isBookmarked = !!bookmarkExists;
+    }
+
+    const postObj = post.toObject();
+    postObj.isLiked = isLiked;
+    postObj.isBookmarked = isBookmarked;
+
+    res.status(200).json(postObj);
   } catch (error) {
     console.error('Get post error:', error.message);
     res.status(500).json({ message: 'Server error' });

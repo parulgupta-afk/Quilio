@@ -108,8 +108,8 @@ export default function Dashboard() {
                 <span>{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : '—'}</span>
               </div>
             </div>
-            {p.status === 'published' && p.slug ? (
-              <Link to={`/post/${p.slug}`} className="ag-card-action">
+            {p.status === 'published' ? (
+              <Link to={`/post/${p.slug || p._id}`} className="ag-card-action">
                 Open
               </Link>
             ) : (
