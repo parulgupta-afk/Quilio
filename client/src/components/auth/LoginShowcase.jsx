@@ -4,7 +4,7 @@ const SLIDES = [
   {
     id: 'understand',
     kicker: 'Read Beyond the Surface',
-    title: "Don't Just Read. Understand.",
+    title: 'Don\'t Just Read. Understand.',
     body: 'Turn articles into deeper understanding with AI-powered explanations, concepts, and insights.',
     visual: 'doc',
   },
@@ -12,7 +12,7 @@ const SLIDES = [
     id: 'chat',
     kicker: 'Chat With Knowledge',
     title: 'Have a Conversation With Every Article.',
-    body: "Ask questions, explore ideas, and get grounded answers directly from the content you're reading.",
+    body: 'Ask questions, explore ideas, and get grounded answers directly from the content you\'re reading.',
     visual: 'chat',
   },
   {
@@ -52,6 +52,11 @@ function VisualDoc() {
       <div className="qs-float qs-chip qs-chip-a">Embeddings</div>
       <div className="qs-float qs-chip qs-chip-b">RAG</div>
       <div className="qs-float qs-chip qs-chip-c">Citations</div>
+      <svg className="qs-connectors" viewBox="0 0 200 120" preserveAspectRatio="none">
+        <path d="M90 40 C120 30, 140 25, 170 20" className="qs-path" />
+        <path d="M90 55 C130 55, 145 70, 175 75" className="qs-path" />
+        <path d="M90 70 C125 90, 140 95, 165 100" className="qs-path" />
+      </svg>
     </div>
   );
 }
@@ -61,26 +66,28 @@ function VisualChat() {
     <div className="qs-visual qs-visual-chat" aria-hidden>
       <div className="qs-glass qs-chat-panel">
         <div className="qs-chat-bubble qs-user">Explain this concept simply.</div>
-        <div className="qs-chat-bubble qs-ai">
-          A grounded answer drawn from the article — with citations you can check.
-        </div>
+        <div className="qs-chat-bubble qs-ai">A grounded answer drawn from the article…</div>
+        <div className="qs-chat-bubble qs-user">How does this relate to machine learning?</div>
+        <div className="qs-chat-bubble qs-ai">It connects through embeddings and retrieval…</div>
       </div>
       <div className="qs-glass qs-mini-doc">
-        <span>Source passage</span>
-        Relevant excerpt from the post…
+        <span>Article</span>
+        <div className="qs-doc-line w90" />
+        <div className="qs-doc-line w70" />
       </div>
     </div>
   );
 }
 
 function VisualPipeline() {
+  const steps = ['Article', 'Concepts', 'Quiz', 'Progress'];
   return (
     <div className="qs-visual qs-visual-pipeline" aria-hidden>
       <div className="qs-pipeline">
-        {['Article', 'Concepts', 'Quiz', 'Progress'].map((label, i) => (
-          <div key={label} className="qs-pipe-step">
-            <div className="qs-glass qs-pipe-node">{label}</div>
-            {i < 3 && <span className="qs-pipe-arrow">→</span>}
+        {steps.map((s, i) => (
+          <div key={s} className="qs-pipe-step">
+            <div className="qs-glass qs-pipe-node">{s}</div>
+            {i < steps.length - 1 && <div className="qs-pipe-arrow">→</div>}
           </div>
         ))}
       </div>
@@ -89,21 +96,32 @@ function VisualPipeline() {
 }
 
 function VisualGraph() {
+  const nodes = [
+    { label: 'AI', x: 50, y: 20 },
+    { label: 'ML', x: 18, y: 55 },
+    { label: 'Neural Nets', x: 78, y: 48 },
+    { label: 'Embeddings', x: 35, y: 85 },
+    { label: 'RAG', x: 70, y: 82 },
+  ];
   return (
     <div className="qs-visual qs-visual-graph" aria-hidden>
-      <div className="qs-glass qs-center-node">Quilio</div>
-      <div className="qs-glass qs-graph-node" style={{ left: '18%', top: '22%' }}>
-        Trees
-      </div>
-      <div className="qs-glass qs-graph-node" style={{ left: '78%', top: '28%' }}>
-        Graphs
-      </div>
-      <div className="qs-glass qs-graph-node" style={{ left: '22%', top: '72%' }}>
-        Search
-      </div>
-      <div className="qs-glass qs-graph-node" style={{ left: '75%', top: '70%' }}>
-        Learning
-      </div>
+      <svg className="qs-graph-svg" viewBox="0 0 100 100">
+        <line x1="50" y1="20" x2="18" y2="55" className="qs-path" />
+        <line x1="50" y1="20" x2="78" y2="48" className="qs-path" />
+        <line x1="18" y1="55" x2="35" y2="85" className="qs-path" />
+        <line x1="78" y1="48" x2="70" y2="82" className="qs-path" />
+        <line x1="35" y1="85" x2="70" y2="82" className="qs-path" />
+        <line x1="50" y1="20" x2="70" y2="82" className="qs-path qs-path-dim" />
+      </svg>
+      {nodes.map((n) => (
+        <div
+          key={n.label}
+          className="qs-glass qs-graph-node"
+          style={{ left: `${n.x}%`, top: `${n.y}%` }}
+        >
+          {n.label}
+        </div>
+      ))}
     </div>
   );
 }
@@ -111,17 +129,21 @@ function VisualGraph() {
 function VisualSocial() {
   return (
     <div className="qs-visual qs-visual-social" aria-hidden>
-      <div className="qs-glass qs-social-card" style={{ left: '8%', top: '20%' }}>
-        <strong>Aria</strong>
-        <span>Published a note</span>
+      <div className="qs-glass qs-center-node">Quilio</div>
+      <div className="qs-float qs-social-card qs-sc-a">
+        <div className="qs-avatar-dot" />
+        <div className="qs-doc-line w80" />
+        <div className="qs-doc-line w50" />
       </div>
-      <div className="qs-glass qs-social-card" style={{ right: '10%', top: '35%' }}>
-        <strong>Marcus</strong>
-        <span>Started a discussion</span>
+      <div className="qs-float qs-social-card qs-sc-b">
+        <div className="qs-avatar-dot" />
+        <div className="qs-doc-line w70" />
+        <div className="qs-doc-line w40" />
       </div>
-      <div className="qs-glass qs-social-card" style={{ left: '20%', bottom: '18%' }}>
-        <strong>Priya</strong>
-        <span>Completed a quiz</span>
+      <div className="qs-float qs-social-card qs-sc-c">
+        <div className="qs-avatar-dot" />
+        <div className="qs-doc-line w60" />
+        <div className="qs-doc-line w55" />
       </div>
     </div>
   );
@@ -129,6 +151,8 @@ function VisualSocial() {
 
 function SlideVisual({ type }) {
   switch (type) {
+    case 'doc':
+      return <VisualDoc />;
     case 'chat':
       return <VisualChat />;
     case 'pipeline':
@@ -138,32 +162,35 @@ function SlideVisual({ type }) {
     case 'social':
       return <VisualSocial />;
     default:
-      return <VisualDoc />;
+      return null;
   }
 }
 
+/**
+ * Left-panel showcase only. No auth logic.
+ * Pointer events isolated to this panel (dots/arrows only).
+ */
 export default function LoginShowcase() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const len = SLIDES.length;
 
   const go = useCallback(
-    (next) => {
-      setIndex(((next % len) + len) % len);
+    (i) => {
+      setIndex(((i % len) + len) % len);
     },
     [len]
   );
 
   useEffect(() => {
     if (paused) return undefined;
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return undefined;
-    }
     const id = setInterval(() => {
       setIndex((v) => (v + 1) % len);
     }, 5500);
     return () => clearInterval(id);
   }, [paused, len]);
+
+  const slide = SLIDES[index];
 
   return (
     <aside
@@ -171,10 +198,6 @@ export default function LoginShowcase() {
       aria-label="What is Quilio"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
-      }}
     >
       <div className="qs-bg" aria-hidden>
         <div className="qs-bg-grid" />
@@ -188,11 +211,11 @@ export default function LoginShowcase() {
         <span className="qs-brand-pill">Scholar</span>
       </div>
 
-      <div className="qs-stage" aria-live="polite">
+      <div className="qs-stage">
         {SLIDES.map((s, i) => (
           <div
             key={s.id}
-            className={`qs-slide ${i === index ? 'is-active' : ''}`}
+            className={`qs-slide ${i === index ? 'is-active' : ''} ${i === (index - 1 + len) % len ? 'is-exit' : ''}`}
             aria-hidden={i !== index}
           >
             <div className="qs-slide-copy">
@@ -208,7 +231,12 @@ export default function LoginShowcase() {
       </div>
 
       <div className="qs-controls">
-        <button type="button" className="qs-arrow" aria-label="Previous slide" onClick={() => go(index - 1)}>
+        <button
+          type="button"
+          className="qs-arrow"
+          aria-label="Previous slide"
+          onClick={() => go(index - 1)}
+        >
           ‹
         </button>
         <div className="qs-dots" role="tablist" aria-label="Slides">
@@ -224,7 +252,12 @@ export default function LoginShowcase() {
             />
           ))}
         </div>
-        <button type="button" className="qs-arrow" aria-label="Next slide" onClick={() => go(index + 1)}>
+        <button
+          type="button"
+          className="qs-arrow"
+          aria-label="Next slide"
+          onClick={() => go(index + 1)}
+        >
           ›
         </button>
       </div>

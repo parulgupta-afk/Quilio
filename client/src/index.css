@@ -3852,3 +3852,20 @@ textarea.input { resize: vertical; min-height: 140px; line-height: 1.5; }
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Boot splash */
+.q-boot { min-height: 100vh; position: relative; overflow: hidden; background: #090a0f; color: #d8d5e5; }
+.q-boot-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.q-boot::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 20%, rgba(3,4,8,.25) 70%, rgba(3,4,8,.72)); }
+.q-boot-ui { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: space-between; padding: 30px clamp(22px, 5vw, 64px); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; }
+.q-boot-top, .q-boot-bottom { display: flex; align-items: center; justify-content: space-between; color: #78758a; }
+.q-boot-top { gap: 10px; }
+.q-boot-mark { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid rgba(192,193,255,.4); border-radius: 8px; background: rgba(128,131,255,.16); color: #c0c1ff; font: italic 600 1rem/1 Newsreader, Georgia, serif; letter-spacing: 0; }
+.q-boot-bottom { text-transform: none; letter-spacing: .04em; font-size: .69rem; }
+.q-boot-pulse { display: inline-block; width: 6px; height: 6px; margin-right: 9px; border-radius: 50%; background: #c0c1ff; box-shadow: 0 0 0 5px rgba(192,193,255,.08), 0 0 18px #a855f7; animation: qBootPulse 1.4s ease-in-out infinite; }
+.q-boot-skip { padding: 8px 12px; color: #858196; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; background: rgba(255,255,255,.035); font: inherit; letter-spacing: .04em; text-transform: none; transition: color .2s, border-color .2s, background .2s; }
+.q-boot-skip:hover { color: #f4f1ff; border-color: rgba(192,193,255,.35); background: rgba(255,255,255,.08); }
+.q-boot-skip span { margin-left: 7px; color: #c0c1ff; }
+@keyframes qBootPulse { 0%,100% { opacity: .45; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.3); } }
+@media (max-width: 600px) { .q-boot-ui { padding: 22px 18px; }.q-boot-bottom { align-items: flex-end; gap: 16px; }.q-boot-bottom > div { max-width: 120px; line-height: 1.5; } }
+@media (prefers-reduced-motion: reduce) { .q-boot-pulse { animation: none; } }

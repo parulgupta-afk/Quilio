@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
 import Welcome from './pages/Welcome';
+import BootSplash from './pages/BootSplash';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import HomeFeed from './pages/HomeFeed';
@@ -28,7 +29,7 @@ export default function App() {
   return (
     <Routes>
       {/* Auth & Public — redirect if already logged in */}
-      <Route path="/" element={<Navigate to="/welcome" replace />} />
+      <Route path="/" element={<BootSplash />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/welcome" element={<Welcome />} />
