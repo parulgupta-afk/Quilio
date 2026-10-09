@@ -28,7 +28,7 @@ export default function App() {
   return (
     <Routes>
       {/* Auth & Public — redirect if already logged in */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/welcome" replace />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/welcome" element={<Welcome />} />
