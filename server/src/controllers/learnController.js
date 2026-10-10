@@ -37,7 +37,7 @@ const getLearnContent = async (req, res) => {
       return res.status(200).json(formatLearnResponse(quiz, true));
     }
 
-    if (!(await checkAIRateLimit(req.user._id)) {
+    if (!(await checkAIRateLimit(req.user._id))) {
       return res.status(429).json({
         message: 'Daily Learn This limit reached. Try again tomorrow.',
       });
