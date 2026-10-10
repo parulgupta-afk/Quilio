@@ -4,6 +4,18 @@
 
 Quilio is an AI-powered social learning and blogging platform: publish articles, discuss them, chat with grounded AI (RAG + citations), run quizzes, and **fork articles into your own learning notes** with version history.
 
+## Live demo
+
+**Status:** Not verified in the engineering environment used for this update.
+
+After you deploy (see `docs/DEPLOYMENT.md`), put the production URL here and capture:
+
+1. Welcome / feed  
+2. AI chat with visible citations  
+3. Fork or Learn This workflow  
+
+Do not add placeholder links presented as live.
+
 ## Stack
 
 | Layer | Technology |
@@ -61,6 +73,15 @@ Original post (root)
 
 Edits create `PostRevision` snapshots; owners can **restore** a revision (current text is saved first).
 
+## Evaluation
+
+| Command | Meaning |
+|---------|---------|
+| `cd server && npm run eval:rag` | Offline: production-style retrieve over **fixture** vectors + labeled seed corpus |
+| `cd server && npm run eval:rag:live` | Live Gemini embeddings (costs money; needs `GEMINI_API_KEY`) |
+
+Offline metrics are **not** claims about Gemini embedding quality. See `server/eval/README.md` if present, and `PROJECT_STATUS.md`.
+
 ## AI model configuration (required)
 
 As of 2026, Google shut down `text-embedding-004` and `gemini-2.0-flash`. Quilio defaults:
@@ -103,15 +124,6 @@ npm run dev
 ```bash
 cd server && npm run seed   # optional demo content
 ```
-
-## Evaluation
-
-| Command | Mode |
-|---------|------|
-| `npm run eval:rag` | Offline, real Quilio chunker + BOW ranking proxy + threshold sweep |
-| `npm run eval:rag:live` | Live Gemini embeddings (costs money; not in default CI) |
-
-Offline metrics are **not** claims about production embedding quality.
 
 ## Scripts
 

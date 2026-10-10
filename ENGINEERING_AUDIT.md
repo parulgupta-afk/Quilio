@@ -1,73 +1,39 @@
-# Quilio Engineering Audit (verified against `main`)
+# Engineering audit (honest)
 
-**Date:** 2026-10-10  
-**Commit inspected:** latest `main` at clone time  
+## Architecture
 
-## Architecture (actual)
+- **Client:** React + Vite + Tailwind + Zustand + Socket.IO client  
+- **Server:** Express + Mongoose + JWT + Socket.IO + Gemini  
+- **Data:** MongoDB (posts, users, social, notifications, embedding chunks, revisions)
 
-```
-React (Vite) + Zustand
-    |  REST /api  (+ Socket.IO with JWT auth)
-    v
-Express (Helmet, CORS, rate-limit)
-    |-- Auth (JWT, bcrypt, Google GIS)
-    |-- Posts / Social / Search
-    |-- AI (Gemini embed + generate)
-    |      |-- embeddingPipeline (chunk → embed → Mongo)
-    |      |-- retrieveRelevantChunks (per-post cosine; minScore gate)
-    |      |-- chatWithPost (citations)
-    |-- Learn (quiz) / Notifications
-    v
-MongoDB Atlas (+ Cloudinary for media)
-```
+## AI pipeline
 
-## Verified working
+1. Chunk post text (`chunkText`)  
+2. Embed with configured Gemini model  
+3. Store vectors + model + dims on `EmbeddingChunk`  
+4. Retrieve via in-app cosine or optional Atlas `$vectorSearch`  
+5. Generate answer with citation markers; validate via `citationGuard`
 
-- JWT register/login/google handlers present; password compare via bcrypt
-- Post ownership checks on update/delete (403)
-- Unique indexes on Follow/Like/Bookmark
-- RAG chat path with sources array
-- Learn This / quiz routes
-- Seed script + demo login (gated in production)
-- Helmet, CORS, global + auth rate limits
-- Health endpoint reports Mongo readyState
-- GitHub Actions CI (server test + client build)
-- Boot splash + welcome + Auth11 + LoginShowcase
+## Security notes
 
-## Verified defects / gaps (pre-fix)
+- JWT on HTTP and Socket.IO handshake  
+- Demo login gated in production when implemented  
+- AI rate limiting present  
+- Secrets must never be committed (`.env` only)
 
-| ID | Issue | Severity |
-|----|--------|----------|
-| D1 | Retrieval loads all chunks for a post into Node and scores in-process (OK per article, not corpus-scale) | Medium |
-| D2 | No RAG evaluation harness | High (interview gap) |
-| D3 | Embeddings sequential, fire-and-forget, no status | Medium |
-| D4 | Socket `join` trusted client `userId` | **High** |
-| D5 | Client did not connect to Socket.IO | Medium |
-| D6 | AI rate limit was in-memory Map | Medium |
-| D7 | Always passed top-4 chunks even if similarity is weak | Medium |
-| D8 | README links to missing PROJECT_AUDIT.md / PHASES docs; no live demo URL | Low |
-| D9 | Tests include source-text pattern checks | Low |
-| D10 | No Atlas Vector Search index (in-app cosine only) | Accepted for MVP scale |
+## Testing
 
-## Email/password login
+- Unit: validation, citations, model config, embedding policy, socket wiring  
+- Integration: fork/edit/restore via Supertest + mongodb-memory-server  
+- Eval: offline RAG gate in CI (`npm run eval:rag`)
 
-Code path is coherent: validateBody → User.find email → comparePassword → JWT → Zustand.  
-**Not reproduced live** in this environment (no Mongo/Gemini credentials). Failure modes to check locally: server down (proxy ECONNREFUSED), wrong password, Google-only accounts without passwordHash.
+## Deployment
 
-## This change set addresses
+See `docs/DEPLOYMENT.md`. No live URL is claimed until smoke-tested after deploy.
 
-- D3: embedding status + retries + concurrency  
-- D4/D5: JWT socket auth + client connect  
-- D6: Mongo-backed AI rate limit (memory fallback)  
-- D7: minScore answerability gate  
-- D2: offline `npm run eval:rag` harness  
-- D8: README rewrite  
-- D9: behavioral demo-login production test  
+## Gaps
 
-## Not done in this pass
-
-- Atlas Vector Search index (requires Atlas UI + M10+ or search-compatible tier)  
-- Live deployment  
-- Full 25–50 question human-labeled eval on real posts  
-- Redis  
-- Knowledge graph / fork feature  
+- Live multi-client socket toast verification  
+- Atlas vector index ops verification  
+- Automated production smoke against a public URL  
+- Genuine screenshots / 60s video for README  
