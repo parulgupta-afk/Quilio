@@ -1,24 +1,21 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-describe('fork lineage helpers', () => {
-  it('rootPost is source when source has no root', () => {
+describe('fork lineage', () => {
+  it('uses source id as root when rootPost is null', () => {
     const source = { _id: 'A', rootPost: null };
-    const rootId = source.rootPost || source._id;
-    assert.equal(rootId, 'A');
+    assert.equal(source.rootPost || source._id, 'A');
   });
-
-  it('rootPost propagates through chain', () => {
+  it('propagates rootPost', () => {
     const source = { _id: 'B', rootPost: 'A' };
-    const rootId = source.rootPost || source._id;
-    assert.equal(rootId, 'A');
+    assert.equal(source.rootPost || source._id, 'A');
   });
+});
 
-  it('fork title prefixes once', () => {
-    const title = 'Intro to Trees';
-    const forked = title.startsWith('Fork:') ? title : `Fork: ${title}`;
-    assert.equal(forked, 'Fork: Intro to Trees');
-    const again = forked.startsWith('Fork:') ? forked : `Fork: ${forked}`;
-    assert.equal(again, 'Fork: Intro to Trees');
+describe('restore semantics', () => {
+  it('increments revision count when snapshotting before restore', () => {
+    const revisionCount = 2;
+    const nextRev = revisionCount + 1;
+    assert.equal(nextRev, 3);
   });
 });

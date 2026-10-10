@@ -11,19 +11,19 @@ const {
   forkPost,
   getPostRevisions,
   getPostForks,
+  restoreRevision,
 } = require('../controllers/postController');
 const { protect, optionalAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validate');
 
 router.get('/', optionalAuth, getPosts);
-
 router.post('/', protect, validateBody({ title: 'string', content: 'string' }), createPost);
 router.get('/me/all', protect, getMyPosts);
 router.get('/author/:userId', getPostsByAuthor);
 
-// Fork / history — must be before /:slug
 router.post('/:id/fork', protect, forkPost);
 router.get('/:id/revisions', protect, getPostRevisions);
+router.post('/:id/revisions/:revisionId/restore', protect, restoreRevision);
 router.get('/:id/forks', optionalAuth, getPostForks);
 
 router.get('/:slug', optionalAuth, getPostBySlug);

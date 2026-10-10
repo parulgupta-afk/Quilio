@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import Layout from '../components/Layout';
 import ChatWithPost from '../components/ChatWithPost';
 import SimilarPosts from '../components/SimilarPosts';
+import PostRevisions from '../components/PostRevisions';
 
 export default function PostDetail() {
   const { slug } = useParams();
@@ -103,13 +104,12 @@ export default function PostDetail() {
   const handleFork = async () => {
     if (!post?._id) return;
     try {
-      const { data } = await api.post(`/posts/${post._id}/fork`);
-      navigate(`/write?edit=${data._id}`);
+      await api.post(`/posts/${post._id}/fork`);
+      navigate('/dashboard');
     } catch (e) {
       alert(e.response?.data?.message || 'Could not fork post');
     }
   };
-
   return (
       <Layout>
         <div className="ns-loading">
@@ -257,16 +257,12 @@ export default function PostDetail() {
         {/* Article body */}
         {isAuthenticated && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-            <button type="button" className="q-intro-secondary" onClick={handleFork} style={{
+            <button type="button" onClick={handleFork} style={{
               padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)',
               background: 'rgba(99,102,241,0.15)', color: '#c7d2fe', cursor: 'pointer', fontSize: 13
-            }}>
-              Fork as notes
-            </button>
+            }}>Fork as notes</button>
             {post?.forkedFrom && (
-              <span style={{ fontSize: 12, color: '#908fa0', alignSelf: 'center' }}>
-                Forked from another article
-              </span>
+              <span style={{ fontSize: 12, color: '#908fa0', alignSelf: 'center' }}>Forked from another article</span>
             )}
           </div>
         )}
@@ -293,6 +289,9 @@ export default function PostDetail() {
         <ChatWithPost postId={post._id} />
 
         {/* Similar Posts */}
+        {user && post && user._id === (post.author?._id || post.author) && (
+          <PostRevisions postId={post._id} />
+        )}
         <SimilarPosts postId={post._id} />
 
         {/* Comments */}

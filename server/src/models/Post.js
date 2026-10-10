@@ -51,28 +51,20 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    /** Immediate parent this post was forked from */
     forkedFrom: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Post',
       default: null,
       index: true,
     },
-    /** Original root of the fork lineage */
     rootPost: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Post',
       default: null,
       index: true,
     },
-    forkCount: {
-      type: Number,
-      default: 0,
-    },
-    revisionCount: {
-      type: Number,
-      default: 0,
-    },
+    forkCount: { type: Number, default: 0 },
+    revisionCount: { type: Number, default: 0 },
   },
   {
     timestamps: true,
