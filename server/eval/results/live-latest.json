@@ -1,0 +1,9 @@
+{
+  "metrics": {
+    "recallAtK": 1,
+    "outOfScopeRefusalRate": 0,
+    "minScore": 0.35,
+    "model": "gemini-embedding-001"
+  },
+  "evaluatedAt": "2026-10-10T05:47:10.522Z"
+}

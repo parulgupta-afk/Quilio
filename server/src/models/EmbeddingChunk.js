@@ -16,6 +16,8 @@ const embeddingChunkSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    startOffset: { type: Number, default: null },
+    endOffset: { type: Number, default: null },
     // Store embedding as array of numbers (Gemini text-embedding-004 is 768 dimensions)
     embedding: {
       type: [Number],
@@ -23,7 +25,7 @@ const embeddingChunkSchema = new mongoose.Schema(
     },
     embeddingModel: {
       type: String,
-      default: 'text-embedding-004',
+      default: 'gemini-embedding-001',
     },
   },
   { timestamps: true }

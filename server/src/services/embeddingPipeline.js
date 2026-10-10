@@ -52,7 +52,9 @@ async function processPostEmbeddings(postId, content) {
           if (!Array.isArray(embedding) || embedding.length !== EMBEDDING_DIMS) {
             throw new Error(`dim mismatch ${embedding?.length} vs ${EMBEDDING_DIMS}`);
           }
-          return { post: postId, chunkText: chunk.chunkText, chunkIndex: chunk.chunkIndex, embedding, embeddingModel: EMBEDDING_MODEL };
+          return { post: postId, chunkText: chunk.chunkText, chunkIndex: chunk.chunkIndex,
+            startOffset: chunk.startOffset ?? null,
+            endOffset: chunk.endOffset ?? null, embedding, embeddingModel: EMBEDDING_MODEL };
         });
         await EmbeddingChunk.insertMany(docs);
         post.embeddingStatus = 'completed';

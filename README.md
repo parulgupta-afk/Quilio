@@ -104,6 +104,15 @@ npm run dev
 cd server && npm run seed   # optional demo content
 ```
 
+## Evaluation
+
+| Command | Mode |
+|---------|------|
+| `npm run eval:rag` | Offline, real Quilio chunker + BOW ranking proxy + threshold sweep |
+| `npm run eval:rag:live` | Live Gemini embeddings (costs money; not in default CI) |
+
+Offline metrics are **not** claims about production embedding quality.
+
 ## Scripts
 
 | Command | Purpose |

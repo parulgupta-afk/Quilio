@@ -1,0 +1,17 @@
+[
+  {
+    "id": "bst",
+    "title": "Understanding Binary Search Trees",
+    "content": "A binary search tree (BST) is a binary tree data structure where each node has at most two children.\n\nFor every node, all values in the left subtree are less than the node value, and all values in the right subtree are greater.\n\nInorder traversal visits the left subtree, then the node, then the right subtree. On a BST, inorder traversal yields keys in sorted ascending order.\n\nAverage search, insert, and delete operations take O(log n) time when the tree is balanced. A skewed tree degrades to O(n).\n\nSelf-balancing variants such as AVL trees and red-black trees maintain height bounds after updates."
+  },
+  {
+    "id": "rag",
+    "title": "Introduction to Retrieval Augmented Generation",
+    "content": "Retrieval Augmented Generation (RAG) combines a retriever with a generative language model.\n\nDocuments are split into chunks, embedded into vectors, and stored in a vector index.\n\nAt query time, the system embeds the question, retrieves top-k similar chunks, and conditions the model on that context.\n\nCitations should refer only to retrieved passages. If retrieval finds no support, the system should refuse rather than invent facts.\n\nChunk size, embedding model, and similarity thresholds all affect answer quality."
+  },
+  {
+    "id": "jwt",
+    "title": "JWT Authentication Basics",
+    "content": "JSON Web Tokens (JWT) are compact tokens used for authentication.\n\nA JWT has three parts: header, payload, and signature, separated by dots.\n\nThe server signs the token with a secret. Clients send the token in the Authorization Bearer header.\n\nTokens should expire. Never store secrets in the frontend. Validate signature and claims on every protected request.\n\nRefresh tokens can be stored more carefully than access tokens to balance security and usability."
+  }
+]

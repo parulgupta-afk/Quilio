@@ -1,7 +1,96 @@
 {
-  "metrics": {
-    "recallAtK": 1,
-    "mrr": 1
+  "version": "2.0.0",
+  "mode": "offline-bow-proxy",
+  "disclaimer": "This ranking uses bag-of-words cosine on real Quilio chunks. It does NOT measure Gemini embedding quality. Use eval:rag:live for embeddings.",
+  "chosenThreshold": 0.02,
+  "chosenMetrics": {
+    "recallAtK": 0.96,
+    "mrr": 0.96,
+    "answerableRetrievalRate": 1,
+    "outOfScopeRefusalRate": 0.4,
+    "nAnswerable": 25,
+    "nOutOfScope": 5,
+    "nExamples": 30
   },
-  "evaluatedAt": "2026-10-10T05:34:30.171Z"
+  "sweep": [
+    {
+      "minScore": 0.02,
+      "topK": 3,
+      "metrics": {
+        "recallAtK": 0.96,
+        "mrr": 0.96,
+        "answerableRetrievalRate": 1,
+        "outOfScopeRefusalRate": 0.4,
+        "nAnswerable": 25,
+        "nOutOfScope": 5,
+        "nExamples": 30
+      }
+    },
+    {
+      "minScore": 0.05,
+      "topK": 3,
+      "metrics": {
+        "recallAtK": 0.96,
+        "mrr": 0.96,
+        "answerableRetrievalRate": 1,
+        "outOfScopeRefusalRate": 0.4,
+        "nAnswerable": 25,
+        "nOutOfScope": 5,
+        "nExamples": 30
+      }
+    },
+    {
+      "minScore": 0.08,
+      "topK": 3,
+      "metrics": {
+        "recallAtK": 0.96,
+        "mrr": 0.96,
+        "answerableRetrievalRate": 1,
+        "outOfScopeRefusalRate": 0.4,
+        "nAnswerable": 25,
+        "nOutOfScope": 5,
+        "nExamples": 30
+      }
+    },
+    {
+      "minScore": 0.12,
+      "topK": 3,
+      "metrics": {
+        "recallAtK": 0.88,
+        "mrr": 0.9,
+        "answerableRetrievalRate": 0.92,
+        "outOfScopeRefusalRate": 0.4,
+        "nAnswerable": 25,
+        "nOutOfScope": 5,
+        "nExamples": 30
+      }
+    },
+    {
+      "minScore": 0.2,
+      "topK": 3,
+      "metrics": {
+        "recallAtK": 0.62,
+        "mrr": 0.62,
+        "answerableRetrievalRate": 0.64,
+        "outOfScopeRefusalRate": 0.4,
+        "nAnswerable": 25,
+        "nOutOfScope": 5,
+        "nExamples": 30
+      }
+    },
+    {
+      "minScore": 0.35,
+      "topK": 3,
+      "metrics": {
+        "recallAtK": 0.26,
+        "mrr": 0.28,
+        "answerableRetrievalRate": 0.28,
+        "outOfScopeRefusalRate": 0.4,
+        "nAnswerable": 25,
+        "nOutOfScope": 5,
+        "nExamples": 30
+      }
+    }
+  ],
+  "evaluatedAt": "2026-10-10T05:46:06.633Z"
 }

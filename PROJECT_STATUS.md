@@ -1,42 +1,38 @@
-# Quilio — Project status (2026-10-10)
+# Quilio — Final project status
 
-## Implemented on `main` (code-verified)
+## Implemented and tested (offline)
 
-| Area | Status |
-|------|--------|
-| Auth JWT / Google / demo gate | Yes |
-| Posts, social, search | Yes |
-| Boot splash → welcome → login | Yes |
-| RAG chat + citation filter + score gate | Yes |
-| Learn / quiz | Yes |
-| Embedding pipeline + retries | Yes |
-| Mongo AI rate limit | Yes |
-| JWT Socket.IO rooms | Yes |
-| Client socket connect | Yes |
-| Fork + revisions + restore | Yes |
-| CI (test + eval:rag + client build) | Yes |
-| Deploy configs (render.yaml, vercel.json) | Yes |
-| README + architecture | Yes |
-| Offline RAG eval harness | Yes |
+- Configurable Gemini models (`gemini-3.6-flash`, `gemini-embedding-001`)
+- Citation parsing from answer text (`[Source N]`)
+- Chunker with character offsets
+- Offline RAG eval v2: **30 labeled questions**, real `chunkText()`, threshold sweep, CI gates
+- Rate-limit sequential enforcement (memory path)
+- Fork/restore route contract tests
+- Unit tests for citations, model config, offsets
 
-## Fixed in this finish pass
+## Implemented but not fully verified live
 
-- Post schema now includes `embeddingStatus` / attempts / error / model / completedAt (pipeline was writing these; schema was missing them).
+- Socket notification toast (client listener present)
+- Atlas `$vectorSearch` ObjectId filter (no live Atlas run here)
+- `smoke:ai` / `eval:rag:live` / `embeddings:reindex` (require your API key + Mongo)
 
-## Not done (requires your accounts)
+## Prepared / external
 
-1. **Public live URL** — deploy Render + Vercel and paste URL into README  
-2. **Atlas Vector Search index** — optional; set `USE_ATLAS_VECTOR_SEARCH=true` after creating index  
-3. **Screenshots / demo video** — add to README for recruiters  
-4. **Human-labeled 25–50 RAG dataset** on real seed posts  
+- Deploy configs (`render.yaml`, `vercel.json`, `docs/DEPLOYMENT.md`)
+- Live public URL — **not set until you deploy**
 
-## Local verify
+## Not claimed
+
+- Perfect recall or zero hallucinations
+- Production-scale vector search without Atlas index
+- Human-labeled production traffic eval
+
+## Commands
 
 ```bash
-cd server && npm install && npm test && npm run eval:rag
-cd client && npm install && npm run build
+cd server && npm test && npm run eval:rag
+# with keys:
+npm run smoke:ai
+npm run embeddings:reindex -- --all
+npm run eval:rag:live
 ```
-
-## Interview one-liner
-
-Quilio is a full-stack social learning app with per-article RAG (grounded refusals + citation filtering), an observable embedding pipeline, JWT-secured realtime notifications, fork/version history, automated tests, and CI — ready to deploy when env vars and hosts are configured.
