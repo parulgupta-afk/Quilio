@@ -1,42 +1,35 @@
 const Notification = require('../models/Notification');
 
 /**
- * Create a notification and optionally emit via Socket.io
+ * Persist a notification and emit to the recipient's authenticated socket room.
+ * Room name is always derived from recipient id — never from client input.
  */
-async function createNotification({
-  recipientId,
-  senderId,
-  type,
-  postId,
-  message,
-  io,
-}) {
+async function createNotification({ recipient, sender, type, post, message }) {
   try {
-    // Don't notify yourself
-    if (recipientId.toString() === senderId?.toString()) return null;
+    if (!recipient || !type) return null;
 
-    const notification = await Notification.create({
-      recipient: recipientId,
-      sender: senderId,
+    const doc = await Notification.create({
+      recipient,
+      sender: sender || undefined,
       type,
-      post: postId,
-      message,
+      post: post || undefined,
+      message: message || '',
     });
 
-    const populated = await Notification.findById(notification._id)
+    const populated = await Notification.findById(doc._id)
       .populate('sender', 'name avatarUrl')
       .populate('post', 'title slug');
 
-    // Real-time emit if socket.io is available
+    const io = global.io;
     if (io) {
-      io.to(recipientId.toString()).emit('notification', populated);
+      io.to(`user:${recipient.toString()}`).emit('notification', populated);
     }
 
     return populated;
-  } catch (error) {
-    console.error('Create notification error:', error.message);
+  } catch (err) {
+    console.error('createNotification error:', err.message);
     return null;
   }
 }
 
-module.exports = createNotification;
+module.exports = { createNotification };

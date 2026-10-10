@@ -6,21 +6,8 @@ const {
   retrieveRelevantChunks,
 } = require('../services/embeddingPipeline');
 
-const aiUsage = new Map();
-
-function checkAIRateLimit(userId) {
-  const limit = 40; // shared daily budget for chat + write
-  const now = Date.now();
-  const dayMs = 24 * 60 * 60 * 1000;
-  let usage = aiUsage.get(userId.toString());
-  if (!usage || now > usage.resetAt) {
-    usage = { count: 0, resetAt: now + dayMs };
-    aiUsage.set(userId.toString(), usage);
-  }
-  if (usage.count >= limit) return false;
-  usage.count += 1;
-  return true;
-}
+const { checkAIRateLimit } = require('../services/aiRateLimit');
+const { DEFAULT_MIN_SCORE } = require('../services/embeddingPipeline');
 
 // @desc    Chat with a specific post (RAG)
 // @route   POST /api/ai/chat/:postId
@@ -33,7 +20,7 @@ const chatWithBlog = async (req, res) => {
       return res.status(400).json({ message: 'Question is required' });
     }
 
-    if (!checkAIRateLimit(req.user._id)) {
+    if (!(await checkAIRateLimit(req.user._id))) {
       return res.status(429).json({
         message: 'Daily AI limit reached. Try again tomorrow.',
       });
@@ -50,18 +37,24 @@ const chatWithBlog = async (req, res) => {
     }
 
     const queryEmbedding = await generateEmbedding(question);
-    const relevantChunks = await retrieveRelevantChunks(postId, queryEmbedding, 4);
+    const relevantChunks = await retrieveRelevantChunks(postId, queryEmbedding, 4, {
+      minScore: DEFAULT_MIN_SCORE,
+      filterWeak: true,
+    });
 
     if (relevantChunks.length === 0) {
       return res.status(200).json({
         answer:
-          'This article does not have enough processed content to answer questions yet.',
+          'This article does not cover that clearly enough for a grounded answer. Try rephrasing, or ask about a topic that appears in the post.',
         sources: [],
+        grounded: false,
+        reason: 'weak_or_empty_retrieval',
+        minScore: DEFAULT_MIN_SCORE,
       });
     }
 
     const result = await chatWithPost(question, relevantChunks, history);
-    res.status(200).json(result);
+    res.status(200).json({ ...result, grounded: true, minScore: DEFAULT_MIN_SCORE });
   } catch (error) {
     console.error('Chat with blog error:', error.message);
     res.status(500).json({ message: 'Failed to generate answer. Please try again.' });
@@ -108,7 +101,7 @@ const writeAssist = async (req, res) => {
     const allowed = ['brainstorm', 'expand', 'complete', 'review', 'rewrite', 'outline'];
     const safeMode = allowed.includes(mode) ? mode : 'expand';
 
-    if (!checkAIRateLimit(req.user._id)) {
+    if (!(await checkAIRateLimit(req.user._id))) {
       return res.status(429).json({
         message: 'Daily AI limit reached. Try again tomorrow.',
       });

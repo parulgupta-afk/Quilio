@@ -1,0 +1,64 @@
+{
+  "datasetVersion": "1.0.0",
+  "config": {
+    "topK": 3,
+    "minScore": 0.05,
+    "embedding": "bow-proxy-for-ci"
+  },
+  "metrics": {
+    "recallAtK": 1,
+    "mrr": 1,
+    "outOfScopeRefusalRate": 0
+  },
+  "rows": [
+    {
+      "id": "q1",
+      "category": "direct",
+      "predicted": [
+        {
+          "chunkIndex": 0,
+          "score": 0.6325
+        },
+        {
+          "chunkIndex": 2,
+          "score": 0.1414
+        }
+      ],
+      "recallAtK": 1,
+      "mrr": 1
+    },
+    {
+      "id": "q2",
+      "category": "multi_chunk",
+      "predicted": [
+        {
+          "chunkIndex": 1,
+          "score": 0.2949
+        },
+        {
+          "chunkIndex": 2,
+          "score": 0.2236
+        }
+      ],
+      "recallAtK": 1,
+      "mrr": 1
+    },
+    {
+      "id": "q3",
+      "category": "out_of_scope",
+      "predicted": [
+        {
+          "chunkIndex": 1,
+          "score": 0.4423
+        },
+        {
+          "chunkIndex": 0,
+          "score": 0.25
+        }
+      ],
+      "recallAtK": null,
+      "mrr": null
+    }
+  ],
+  "evaluatedAt": "2026-10-10T04:43:05.340Z"
+}

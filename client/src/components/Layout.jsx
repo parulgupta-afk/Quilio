@@ -1,5 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import { connectSocket, disconnectSocket } from '../services/socket';
+import { useEffect } from 'react';
 import UserAvatar from './UserAvatar';
 
 /* ── Quilio Logo SVG emblem ── */
@@ -24,10 +26,18 @@ const QuilioEmblem = ({ size = 32 }) => (
 );
 
 export default function Layout({ children }) {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, token } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      connectSocket(token);
+    } else {
+      disconnectSocket();
+    }
+  }, [isAuthenticated, token]);
 
   const isActive = (p) => path === p || path.startsWith(p + '/');
 

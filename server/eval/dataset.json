@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "notes": "Synthetic ground-truth for retrieval metric unit tests. Real content eval requires seed posts + embeddings.",
+  "examples": [
+    {
+      "id": "q1",
+      "question": "What is a binary search tree?",
+      "relevantChunkIndices": [0],
+      "answerable": true,
+      "category": "direct"
+    },
+    {
+      "id": "q2",
+      "question": "How does inorder traversal visit nodes?",
+      "relevantChunkIndices": [1, 2],
+      "answerable": true,
+      "category": "multi_chunk"
+    },
+    {
+      "id": "q3",
+      "question": "What is the capital of Mars?",
+      "relevantChunkIndices": [],
+      "answerable": false,
+      "category": "out_of_scope"
+    }
+  ],
+  "corpusChunks": [
+    { "chunkIndex": 0, "chunkText": "A binary search tree (BST) is a binary tree where left children are less than the node and right children are greater." },
+    { "chunkIndex": 1, "chunkText": "Inorder traversal visits the left subtree, then the node, then the right subtree." },
+    { "chunkIndex": 2, "chunkText": "Inorder on a BST yields keys in sorted ascending order." },
+    { "chunkIndex": 3, "chunkText": "Unrelated text about cooking pasta and boiling water." }
+  ]
+}

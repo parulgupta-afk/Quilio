@@ -1,4 +1,4 @@
-const { describe, it, before, after } = require('node:test');
+const { describe, it, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 describe('demoLogin production gate', () => {
@@ -8,14 +8,20 @@ describe('demoLogin production gate', () => {
     process.env.NODE_ENV = original;
   });
 
-  it('source controller blocks production (static check)', () => {
-    const fs = require('fs');
-    const path = require('path');
-    const src = fs.readFileSync(
-      path.join(__dirname, '../src/controllers/authController.js'),
-      'utf8'
-    );
-    assert.match(src, /NODE_ENV === ['"]production['"]/);
-    assert.match(src, /Demo login is disabled in production/);
+  it('rejects demo-login when NODE_ENV is production (HTTP)', async (t) => {
+    let request;
+    try {
+      request = require('supertest');
+    } catch {
+      t.skip('supertest not installed');
+      return;
+    }
+    process.env.NODE_ENV = 'production';
+    // Ensure JWT secret exists so app modules load
+    if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'test-secret-for-ci';
+    const app = require('../src/app');
+    const res = await request(app).post('/api/auth/demo-login').send({});
+    assert.equal(res.status, 403);
+    assert.match(String(res.body.message || ''), /disabled/i);
   });
 });

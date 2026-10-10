@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "test": "node --test tests/**/*.test.js",
     "seed": "node src/scripts/seedDemo.js",
-    "test:unit": "node --test tests/validate.test.js tests/demoLoginGate.test.js"
+    "test:unit": "node --test tests/validate.test.js tests/demoLoginGate.test.js",
+    "eval:rag": "node eval/evalRag.js"
   },
   "keywords": [
     "quilio",
