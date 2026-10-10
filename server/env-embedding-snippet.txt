@@ -1,0 +1,9 @@
+EMBEDDING_DIMS=768
+AI_DAILY_LIMIT=40
+USE_ATLAS_VECTOR_SEARCH=false
+ATLAS_VECTOR_INDEX=embedding_vector_index
+
+# Gemini models (Oct 2026 defaults — text-embedding-004 & gemini-2.0-flash are shut down)
+--
+GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+EMBEDDING_DIMS=768
