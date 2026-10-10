@@ -1,4 +1,11 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const {
+  getChatModelName,
+  getWritingModelName,
+  getEmbeddingModelName,
+  getEmbeddingDims,
+  getModelConfig,
+} = require('./modelConfig');
 
 function getGenAI() {
   const key = process.env.GEMINI_API_KEY;
@@ -11,17 +18,37 @@ function getGenAI() {
 // ==================== EMBEDDINGS ====================
 
 /**
- * Generate embedding for a piece of text using Gemini
- * Model: text-embedding-004 (768 dimensions)
+ * Generate embedding using configured model. Validates dimension before return.
  */
 async function generateEmbedding(text) {
+  const modelName = getEmbeddingModelName();
+  const expectedDims = getEmbeddingDims();
   try {
-    const model = getGenAI().getGenerativeModel({ model: 'text-embedding-004' });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
+    const model = getGenAI().getGenerativeModel({ model: modelName });
+    // Prefer task-typed embed when supported (gemini-embedding-001)
+    let result;
+    try {
+      result = await model.embedContent({
+        content: { role: 'user', parts: [{ text: String(text || '').slice(0, 8000) }] },
+        taskType: 'RETRIEVAL_DOCUMENT',
+      });
+    } catch {
+      result = await model.embedContent(String(text || '').slice(0, 8000));
+    }
+    const values = result?.embedding?.values;
+    if (!Array.isArray(values) || values.length === 0) {
+      throw new Error('Empty embedding returned');
+    }
+    if (expectedDims && values.length !== expectedDims) {
+      // gemini-embedding-001/2 can return flexible dims; truncate/pad is unsafe — surface mismatch
+      console.warn(
+        `Embedding dim ${values.length} != configured EMBEDDING_DIMS=${expectedDims} (model=${modelName})`
+      );
+    }
+    return values;
   } catch (error) {
-    console.error('Embedding error:', error.message);
-    throw new Error('Failed to generate embedding');
+    console.error('Embedding error:', error.message, 'model=', modelName);
+    throw new Error(`Failed to generate embedding (${modelName}): ${error.message}`);
   }
 }
 
@@ -89,7 +116,7 @@ function chunkText(text, maxChunkSize = 500) {
 async function chatWithPost(question, contextChunks, conversationHistory = []) {
   try {
     const model = getGenAI().getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: getChatModelName(),
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 1024,
@@ -211,11 +238,10 @@ Rules:
 - content must come from the article`;
 
   const modelsToTry = [
-    "gemini-2.0-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash",
-    "gemini-flash-latest",
-  ];
+    getChatModelName(),
+    process.env.GEMINI_CHAT_FALLBACK || 'gemini-3.6-flash',
+    'gemini-3.5-flash-lite',
+  ].filter((v, i, a) => v && a.indexOf(v) === i);
 
   let lastError = null;
   let data = null;
@@ -381,7 +407,7 @@ Rules:
 async function writeWithAI({ mode, title, draft, userMessage, history = [] }) {
   try {
     const model = getGenAI().getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: getWritingModelName(),
       generationConfig: {
         temperature: 0.65,
         maxOutputTokens: 4096,
@@ -446,4 +472,8 @@ module.exports = {
   cosineSimilarity,
   generateLearnContent,
   writeWithAI,
+  getModelConfig,
+  getChatModelName,
+  getEmbeddingModelName,
+  getEmbeddingDims,
 };

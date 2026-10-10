@@ -3,21 +3,7 @@ const QuizAttempt = require('../models/QuizAttempt');
 const Post = require('../models/Post');
 const { generateLearnContent } = require('../services/aiService');
 
-const learnUsage = new Map();
-
-function checkLearnRateLimit(userId) {
-  const limit = 10;
-  const now = Date.now();
-  const dayMs = 24 * 60 * 60 * 1000;
-  let usage = learnUsage.get(userId.toString());
-  if (!usage || now > usage.resetAt) {
-    usage = { count: 0, resetAt: now + dayMs };
-    learnUsage.set(userId.toString(), usage);
-  }
-  if (usage.count >= limit) return false;
-  usage.count += 1;
-  return true;
-}
+const { checkAIRateLimit } = require('../services/aiRateLimit');
 
 function formatLearnResponse(quiz, cached) {
   const safeQuestions = (quiz.questions || []).map((q) => ({
@@ -51,7 +37,7 @@ const getLearnContent = async (req, res) => {
       return res.status(200).json(formatLearnResponse(quiz, true));
     }
 
-    if (!checkLearnRateLimit(req.user._id)) {
+    if (!(await checkAIRateLimit(req.user._id)) {
       return res.status(429).json({
         message: 'Daily Learn This limit reached. Try again tomorrow.',
       });

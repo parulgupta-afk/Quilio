@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../services/socket';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import UserAvatar from './UserAvatar';
 
 /* ── Quilio Logo SVG emblem ── */
@@ -27,9 +27,27 @@ const QuilioEmblem = ({ size = 32 }) => (
 
 export default function Layout({ children }) {
   const { isAuthenticated, user, logout, token } = useAuthStore();
+  const [toast, setToast] = useState(null);
+
   useEffect(() => {
-    if (isAuthenticated && token) connectSocket(token);
-    else disconnectSocket();
+    if (isAuthenticated && token) {
+      const s = connectSocket(token);
+      const onNotification = (payload) => {
+        const msg =
+          payload?.message ||
+          (payload?.type === 'like' && 'Someone liked your post') ||
+          (payload?.type === 'comment' && 'New comment on your post') ||
+          (payload?.type === 'follow' && 'New follower') ||
+          'New notification';
+        setToast(msg);
+        window.setTimeout(() => setToast(null), 4000);
+      };
+      s?.on?.('notification', onNotification);
+      return () => {
+        s?.off?.('notification', onNotification);
+      };
+    }
+    disconnectSocket();
   }, [isAuthenticated, token]);
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,6 +70,14 @@ export default function Layout({ children }) {
 
   return (
     <div className="ns-shell">
+      {toast && (
+        <div role="status" style={{
+          position: 'fixed', top: 16, right: 16, zIndex: 9999,
+          maxWidth: 320, padding: '12px 16px', borderRadius: 12,
+          background: 'rgba(24,24,32,0.95)', border: '1px solid rgba(165,180,252,0.35)',
+          color: '#e4e4e7', fontSize: 13, boxShadow: '0 8px 30px rgba(0,0,0,0.4)'
+        }}>{toast}</div>
+      )}
       {/* ── Top Header ── */}
       <header className="ns-topbar">
         <div className="ns-topbar-brand">

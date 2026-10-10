@@ -61,6 +61,30 @@ Original post (root)
 
 Edits create `PostRevision` snapshots; owners can **restore** a revision (current text is saved first).
 
+## AI model configuration (required)
+
+As of 2026, Google shut down `text-embedding-004` and `gemini-2.0-flash`. Quilio defaults:
+
+| Variable | Default |
+|----------|---------|
+| `GEMINI_CHAT_MODEL` | `gemini-3.6-flash` |
+| `GEMINI_WRITING_MODEL` | same as chat |
+| `GEMINI_EMBEDDING_MODEL` | `gemini-embedding-001` |
+| `EMBEDDING_DIMS` | `768` |
+
+After changing embedding model, re-index:
+
+```bash
+cd server && npm run embeddings:reindex
+# or: npm run embeddings:reindex -- --all --limit=100
+```
+
+Live API smoke (costs tokens):
+
+```bash
+cd server && npm run smoke:ai
+```
+
 ## Quick start
 
 ```bash

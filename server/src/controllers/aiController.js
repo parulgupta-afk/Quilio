@@ -8,7 +8,7 @@ const {
 
 const { checkAIRateLimit } = require('../services/aiRateLimit');
 const { DEFAULT_MIN_SCORE } = require('../services/embeddingPipeline');
-const { buildGroundedSources, filterModelSources } = require('../services/citationGuard');
+const { validateAnswerCitations } = require('../services/citationGuard');
 const logger = require('../utils/logger');
 
 // @desc    Chat with a specific post (RAG)
@@ -57,13 +57,14 @@ const chatWithBlog = async (req, res) => {
     }
 
     const result = await chatWithPost(question, relevantChunks, history);
-    const sources = filterModelSources(result.sources, relevantChunks);
-    logger.info('rag_ok', { postId, chunks: relevantChunks.length });
+    const citation = validateAnswerCitations(result.answer, relevantChunks);
     res.status(200).json({
       answer: result.answer,
-      sources,
+      sources: citation.sources,
       grounded: true,
       minScore: DEFAULT_MIN_SCORE,
+      citationValid: citation.citationValid,
+      invalidCitations: citation.invalidCitations,
     });
   } catch (error) {
     console.error('Chat with blog error:', error.message);

@@ -54,9 +54,28 @@ const getSimilarPosts = async (req, res) => {
       return res.status(200).json({ posts: fallback, method: 'tags' });
     }
 
-    // Get all other published posts that have embeddings
+    // Bound candidates: recent published posts only (do not load full corpus)
+    const mongoose = require('mongoose');
+    const oid = mongoose.Types.ObjectId.createFromHexString
+      ? mongoose.Types.ObjectId.createFromHexString(String(postId))
+      : new mongoose.Types.ObjectId(String(postId));
+
+    const candidatePosts = await Post.find({
+      status: 'published',
+      _id: { $ne: oid },
+    })
+      .sort({ createdAt: -1 })
+      .limit(40)
+      .select('_id')
+      .lean();
+
+    const candidateIds = candidatePosts.map((p) => p._id);
+    if (candidateIds.length === 0) {
+      return res.status(200).json({ posts: [], method: 'embeddings' });
+    }
+
     const allChunks = await EmbeddingChunk.aggregate([
-      { $match: { post: { $ne: require('mongoose').Types.ObjectId.createFromHexString(postId) } } },
+      { $match: { post: { $in: candidateIds } } },
       {
         $group: {
           _id: '$post',
@@ -66,15 +85,15 @@ const getSimilarPosts = async (req, res) => {
     ]);
 
     const scored = [];
-
     for (const item of allChunks) {
+      if (!item.embeddings?.length) continue;
       const dim = item.embeddings[0].length;
+      if (dim !== sourceEmbedding.length) continue; // skip incompatible dims
       const avg = new Array(dim).fill(0);
       for (const emb of item.embeddings) {
         for (let i = 0; i < dim; i++) avg[i] += emb[i];
       }
       for (let i = 0; i < dim; i++) avg[i] /= item.embeddings.length;
-
       const score = cosineSimilarity(sourceEmbedding, avg);
       scored.push({ postId: item._id, score });
     }

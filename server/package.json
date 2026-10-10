@@ -10,7 +10,9 @@
     "test": "node --test tests/**/*.test.js",
     "seed": "node src/scripts/seedDemo.js",
     "test:unit": "node --test tests/validate.test.js tests/demoLoginGate.test.js",
-    "eval:rag": "node eval/evalRag.js"
+    "eval:rag": "node eval/evalRag.js",
+    "smoke:ai": "node scripts/smokeAi.js",
+    "embeddings:reindex": "node scripts/reindexEmbeddings.js"
   },
   "keywords": [
     "quilio",

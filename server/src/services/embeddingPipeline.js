@@ -1,9 +1,10 @@
+const mongoose = require('mongoose');
 const EmbeddingChunk = require('../models/EmbeddingChunk');
 const Post = require('../models/Post');
 const { generateEmbedding, chunkText } = require('./aiService');
 const logger = require('../utils/logger');
 
-const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-004';
+const EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL || process.env.EMBEDDING_MODEL || 'gemini-embedding-001';
 const EMBEDDING_DIMS = Number(process.env.EMBEDDING_DIMS || 768);
 const DEFAULT_MIN_SCORE = Number(process.env.RAG_MIN_SCORE || 0.35);
 const USE_ATLAS_VECTOR = process.env.USE_ATLAS_VECTOR_SEARCH === 'true';
@@ -99,7 +100,7 @@ async function retrieveAtlas(postId, queryEmbedding, topK, minScore, filterWeak)
           queryVector: queryEmbedding,
           numCandidates: Math.max(topK * 20, 50),
           limit: topK,
-          filter: { post: postId },
+          filter: { post: new mongoose.Types.ObjectId(String(postId)) },
         },
       },
       { $project: { chunkText: 1, chunkIndex: 1, post: 1, score: { $meta: 'vectorSearchScore' } } },

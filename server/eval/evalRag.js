@@ -24,3 +24,13 @@ const out={metrics:{recallAtK:rN?rSum/rN:null,mrr:mN?mSum/mN:null},evaluatedAt:n
 fs.mkdirSync(path.join(__dirname,'results'),{recursive:true});
 fs.writeFileSync(path.join(__dirname,'results/latest.json'),JSON.stringify(out,null,2));
 console.log(JSON.stringify(out.metrics));
+
+// Quality gates for CI (offline BOW proxy — not production vector quality)
+const MIN_RECALL = Number(process.env.EVAL_MIN_RECALL || 0.5);
+const metrics = out.metrics;
+const recall = metrics.recallAtK;
+if (recall !== null && recall < MIN_RECALL) {
+  console.error('EVAL FAIL: recallAtK', recall, '<', MIN_RECALL);
+  process.exit(1);
+}
+console.log('EVAL PASS (offline fixtures)');
