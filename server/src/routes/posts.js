@@ -8,19 +8,24 @@ const {
   getPostsByAuthor,
   updatePost,
   deletePost,
+  forkPost,
+  getPostRevisions,
+  getPostForks,
 } = require('../controllers/postController');
 const { protect, optionalAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validate');
 
-// Public
 router.get('/', optionalAuth, getPosts);
 
-// Specific routes BEFORE :slug
 router.post('/', protect, validateBody({ title: 'string', content: 'string' }), createPost);
 router.get('/me/all', protect, getMyPosts);
 router.get('/author/:userId', getPostsByAuthor);
 
-// Parametric last
+// Fork / history — must be before /:slug
+router.post('/:id/fork', protect, forkPost);
+router.get('/:id/revisions', protect, getPostRevisions);
+router.get('/:id/forks', optionalAuth, getPostForks);
+
 router.get('/:slug', optionalAuth, getPostBySlug);
 router.put('/:id', protect, updatePost);
 router.delete('/:id', protect, deletePost);

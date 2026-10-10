@@ -51,15 +51,28 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    embeddingStatus: {
-      type: String,
-      enum: ['none', 'pending', 'processing', 'completed', 'failed'],
-      default: 'none',
+    /** Immediate parent this post was forked from */
+    forkedFrom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
+      default: null,
+      index: true,
     },
-    embeddingAttempts: { type: Number, default: 0 },
-    embeddingLastError: { type: String, default: '' },
-    embeddingModel: { type: String, default: '' },
-    embeddingCompletedAt: { type: Date, default: null },
+    /** Original root of the fork lineage */
+    rootPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
+      default: null,
+      index: true,
+    },
+    forkCount: {
+      type: Number,
+      default: 0,
+    },
+    revisionCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

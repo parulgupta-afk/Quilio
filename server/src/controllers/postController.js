@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const PostRevision = require('../models/PostRevision');
 const Like = require('../models/Like');
 const Bookmark = require('../models/Bookmark');
 const { processPostEmbeddings } = require('../services/embeddingPipeline');
@@ -194,6 +195,21 @@ const updatePost = async (req, res) => {
     const { title, content, coverImageUrl, tags, status } = req.body;
     const wasPublished = post.status === 'published';
     const contentChanged = content && content !== post.content;
+    const titleChanged = title && title !== post.title;
+
+    // Snapshot previous version before applying edits
+    if (contentChanged || titleChanged) {
+      const nextRev = (post.revisionCount || 0) + 1;
+      await PostRevision.create({
+        post: post._id,
+        editor: req.user._id,
+        title: post.title,
+        content: post.content,
+        revisionNumber: nextRev,
+        note: req.body.revisionNote || '',
+      });
+      post.revisionCount = nextRev;
+    }
 
     post.title = title || post.title;
     post.content = content || post.content;
@@ -204,6 +220,9 @@ const updatePost = async (req, res) => {
 
     const updatedPost = await post.save();
     await updatedPost.populate('author', 'name avatarUrl');
+    if (updatedPost.forkedFrom) {
+      await updatedPost.populate('forkedFrom', 'title slug author');
+    }
 
     if (updatedPost.status === 'published' && (contentChanged || !wasPublished)) {
       processPostEmbeddings(updatedPost._id, updatedPost.content);
@@ -238,6 +257,79 @@ const deletePost = async (req, res) => {
   }
 };
 
+// @desc    Fork a published post into the current user's draft
+// @route   POST /api/posts/:id/fork
+const forkPost = async (req, res) => {
+  try {
+    const source = await Post.findById(req.params.id).populate('author', 'name');
+    if (!source) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    if (source.status !== 'published' && source.author._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only published posts can be forked' });
+    }
+
+    const rootId = source.rootPost || source._id;
+    const fork = await Post.create({
+      author: req.user._id,
+      title: source.title.startsWith('Fork:') ? source.title : `Fork: ${source.title}`,
+      content: source.content,
+      excerpt: source.excerpt || '',
+      coverImageUrl: source.coverImageUrl || '',
+      tags: source.tags || [],
+      status: 'draft',
+      forkedFrom: source._id,
+      rootPost: rootId,
+    });
+
+    await Post.findByIdAndUpdate(source._id, { $inc: { forkCount: 1 } });
+
+    const populated = await Post.findById(fork._id)
+      .populate('author', 'name avatarUrl')
+      .populate('forkedFrom', 'title slug author');
+
+    res.status(201).json(populated);
+  } catch (error) {
+    console.error('Fork post error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    List revisions for a post (owner only)
+// @route   GET /api/posts/:id/revisions
+const getPostRevisions = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    const revisions = await PostRevision.find({ post: post._id })
+      .sort({ revisionNumber: -1 })
+      .populate('editor', 'name avatarUrl')
+      .limit(50);
+    res.status(200).json({ revisions, currentRevisionCount: post.revisionCount || 0 });
+  } catch (error) {
+    console.error('Get revisions error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    List forks of a post
+// @route   GET /api/posts/:id/forks
+const getPostForks = async (req, res) => {
+  try {
+    const forks = await Post.find({ forkedFrom: req.params.id, status: 'published' })
+      .populate('author', 'name avatarUrl')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    res.status(200).json({ forks });
+  } catch (error) {
+    console.error('Get forks error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createPost,
   getPosts,
@@ -246,4 +338,7 @@ module.exports = {
   getPostsByAuthor,
   updatePost,
   deletePost,
+  forkPost,
+  getPostRevisions,
+  getPostForks,
 };
