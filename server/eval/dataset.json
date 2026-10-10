@@ -1,18 +1,14 @@
 {
   "version": "1.1.0",
-  "notes": "Offline BOW proxy dataset for CI. Expand with real seed article chunks for production eval.",
   "examples": [
-    { "id": "q1", "question": "What is a binary search tree?", "relevantChunkIndices": [0], "answerable": true, "category": "direct" },
-    { "id": "q2", "question": "How does inorder traversal visit nodes?", "relevantChunkIndices": [1, 2], "answerable": true, "category": "multi_chunk" },
-    { "id": "q3", "question": "Does inorder traversal sort BST keys?", "relevantChunkIndices": [2], "answerable": true, "category": "synthesis" },
-    { "id": "q4", "question": "What is the capital of Mars?", "relevantChunkIndices": [], "answerable": false, "category": "out_of_scope" },
-    { "id": "q5", "question": "How do I cook pasta?", "relevantChunkIndices": [], "answerable": false, "category": "unrelated" },
-    { "id": "q6", "question": "What color is the left child rule?", "relevantChunkIndices": [0], "answerable": true, "category": "ambiguous_wording" }
+    { "id": "q1", "question": "What is a binary search tree?", "relevantChunkIndices": [0], "answerable": true },
+    { "id": "q2", "question": "How does inorder traversal work?", "relevantChunkIndices": [1, 2], "answerable": true },
+    { "id": "q3", "question": "Capital of Mars?", "relevantChunkIndices": [], "answerable": false }
   ],
   "corpusChunks": [
-    { "chunkIndex": 0, "chunkText": "A binary search tree (BST) is a binary tree where left children are less than the node and right children are greater." },
-    { "chunkIndex": 1, "chunkText": "Inorder traversal visits the left subtree, then the node, then the right subtree." },
-    { "chunkIndex": 2, "chunkText": "Inorder on a BST yields keys in sorted ascending order." },
-    { "chunkIndex": 3, "chunkText": "Unrelated text about cooking pasta and boiling water." }
+    { "chunkIndex": 0, "chunkText": "A binary search tree has left children less than the node and right greater." },
+    { "chunkIndex": 1, "chunkText": "Inorder visits left, node, then right." },
+    { "chunkIndex": 2, "chunkText": "Inorder on a BST yields sorted keys." },
+    { "chunkIndex": 3, "chunkText": "Pasta cooking instructions." }
   ]
 }

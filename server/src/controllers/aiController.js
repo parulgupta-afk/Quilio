@@ -9,6 +9,7 @@ const {
 const { checkAIRateLimit } = require('../services/aiRateLimit');
 const { DEFAULT_MIN_SCORE } = require('../services/embeddingPipeline');
 const { buildGroundedSources, filterModelSources } = require('../services/citationGuard');
+const logger = require('../utils/logger');
 
 // @desc    Chat with a specific post (RAG)
 // @route   POST /api/ai/chat/:postId
@@ -44,6 +45,7 @@ const chatWithBlog = async (req, res) => {
     });
 
     if (relevantChunks.length === 0) {
+      logger.info('rag_refusal', { postId, reason: 'weak_or_empty_retrieval' });
       return res.status(200).json({
         answer:
           'This article does not cover that clearly enough for a grounded answer. Try rephrasing, or ask about a topic that appears in the post.',
@@ -56,6 +58,7 @@ const chatWithBlog = async (req, res) => {
 
     const result = await chatWithPost(question, relevantChunks, history);
     const sources = filterModelSources(result.sources, relevantChunks);
+    logger.info('rag_ok', { postId, chunks: relevantChunks.length });
     res.status(200).json({
       answer: result.answer,
       sources,

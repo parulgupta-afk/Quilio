@@ -1,43 +1,32 @@
 # Quilio
 
-AI-powered social learning & blogging: publish, discuss, chat with grounded RAG, and learn with quizzes.
+AI-powered social learning & blogging platform (React, Express, MongoDB, Gemini).
 
-## Stack
-
-React · Vite · Zustand · Express · MongoDB · JWT · Gemini · Socket.IO · Cloudinary
-
-## Features
-
-- Auth (email/password, Google GIS, demo login gated in production)
-- Social blogging (follow, like, comment, bookmark, search)
-- **Chat with a post** — per-article RAG + citation guard + score threshold
-- **Learn This** — concepts + quizzes
-- Embedding pipeline with status, retries, bounded concurrency
-- Optional **Atlas Vector Search** (`USE_ATLAS_VECTOR_SEARCH=true`)
-- Socket notifications (JWT-authenticated rooms)
-- Offline RAG eval: `cd server && npm run eval:rag`
-
-## Quick start
+## Run locally
 
 ```bash
 cd server && cp .env.example .env && npm i && npm run dev
 cd client && npm i && npm run dev
 ```
 
-See `docs/DEPLOYMENT.md` and `docs/ATLAS_VECTOR_SEARCH.md`.
-
 ## Scripts
 
 | Command | Purpose |
 |---------|---------|
-| `server: npm test` | Automated tests |
-| `server: npm run eval:rag` | Offline retrieval metrics |
-| `client: npm run build` | Production build |
+| `cd server && npm test` | Automated tests |
+| `cd server && npm run eval:rag` | Offline retrieval metrics |
+| `cd client && npm run build` | Frontend production build |
+
+## Docs
+
+- `docs/DEPLOYMENT.md`
+- `docs/ATLAS_VECTOR_SEARCH.md`
+
+## Deploy
+
+- Backend: `render.yaml` or Render root `server`
+- Frontend: Vercel + `client/vercel.json` (set API host)
 
 ## Live demo
 
-Not verified in-repo — add URL after deploy.
-
-## License
-
-ISC
+Not verified in this repo snapshot.

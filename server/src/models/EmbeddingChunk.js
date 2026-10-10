@@ -16,6 +16,7 @@ const embeddingChunkSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    // Store embedding as array of numbers (Gemini text-embedding-004 is 768 dimensions)
     embedding: {
       type: [Number],
       required: true,
@@ -28,6 +29,7 @@ const embeddingChunkSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Index for faster lookups by post
 embeddingChunkSchema.index({ post: 1, chunkIndex: 1 });
 
 module.exports = mongoose.model('EmbeddingChunk', embeddingChunkSchema);

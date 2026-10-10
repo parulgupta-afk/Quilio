@@ -1,0 +1,44 @@
+{
+  "name": "quilio-server",
+  "version": "1.0.0",
+  "description": "Quilio - AI-Powered Social Learning & Blogging Platform (Backend)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "node --test tests/**/*.test.js",
+    "seed": "node src/scripts/seedDemo.js",
+    "test:unit": "node --test tests/validate.test.js tests/demoLoginGate.test.js",
+    "eval:rag": "node eval/evalRag.js"
+  },
+  "keywords": [
+    "quilio",
+    "blogging",
+    "learning",
+    "rag",
+    "ai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.4.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.6.0",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "supertest": "^7.3.1"
+  }
+}

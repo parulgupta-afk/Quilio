@@ -13,13 +13,11 @@ async function createNotification({ recipient, sender, type, post, message }) {
     const populated = await Notification.findById(doc._id)
       .populate('sender', 'name avatarUrl')
       .populate('post', 'title slug');
-    const io = global.io;
-    if (io) io.to(`user:${recipient.toString()}`).emit('notification', populated);
+    if (global.io) global.io.to(`user:${recipient.toString()}`).emit('notification', populated);
     return populated;
   } catch (err) {
     console.error('createNotification error:', err.message);
     return null;
   }
 }
-
 module.exports = { createNotification };

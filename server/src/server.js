@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const app = require('./app');
 const connectDB = require('./config/db');
+const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 5000;
 
@@ -44,17 +45,26 @@ const startServer = async () => {
 
   io.on('connection', (socket) => {
     socket.join(`user:${socket.userId}`);
+    logger.info('socket_connected', { userId: socket.userId });
   });
 
   app.set('io', io);
   global.io = io;
 
   server.listen(PORT, () => {
-    console.log(`Quilio API listening on port ${PORT}`);
+    logger.info('server_listen', { port: PORT, env: process.env.NODE_ENV || 'development' });
   });
+
+  const shutdown = () => {
+    logger.info('server_shutdown', {});
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 10000);
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 };
 
 startServer().catch((err) => {
-  console.error('Failed to start server:', err.message);
+  console.error('Failed to start:', err.message);
   process.exit(1);
 });
