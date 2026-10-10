@@ -65,6 +65,15 @@ const postSchema = new mongoose.Schema(
     },
     forkCount: { type: Number, default: 0 },
     revisionCount: { type: Number, default: 0 },
+    embeddingStatus: {
+      type: String,
+      enum: ['none', 'pending', 'processing', 'completed', 'failed'],
+      default: 'none',
+    },
+    embeddingAttempts: { type: Number, default: 0 },
+    embeddingLastError: { type: String, default: '' },
+    embeddingModel: { type: String, default: '' },
+    embeddingCompletedAt: { type: Date, default: null },
   },
   {
     timestamps: true,

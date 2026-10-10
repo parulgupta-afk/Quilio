@@ -115,3 +115,7 @@ See `docs/DEPLOYMENT.md` if present. Typical split:
 ## License
 
 ISC
+
+## Project status
+
+See `PROJECT_STATUS.md` for a verified feature checklist and remaining manual steps (deploy URL, Atlas index).
