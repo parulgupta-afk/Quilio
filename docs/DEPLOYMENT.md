@@ -19,7 +19,8 @@
 |----------|----------|
 | `MONGODB_URI` | yes |
 | `JWT_SECRET` | yes |
-| `CLIENT_URL` | yes (Vercel URL, no trailing slash) |
+| `CLIENT_URL` | yes (Vercel URL, e.g. `https://quilio-olive.vercel.app`, no trailing slash) |
+| `CORS_ORIGIN` | optional (alternative/additional allowed origins) |
 | `GEMINI_API_KEY` | yes for AI |
 | `GEMINI_CHAT_MODEL` | optional (default `gemini-3.6-flash`) |
 | `GEMINI_EMBEDDING_MODEL` | optional (default `gemini-embedding-001`) |
@@ -34,17 +35,14 @@ Blueprint: root `render.yaml`.
 ## Frontend (Vercel)
 
 1. Project root: `client`  
-2. Build: `npm run build` · Output: `dist`  
-3. Edit `client/vercel.json` — replace `YOUR-API-HOST` with the Render hostname (no `https://` scheme issues: use full origin in destination).
+2. Build command: `npm run build` · Output directory: `dist`  
+3. Environment variables on Vercel:
+   - `VITE_API_URL=https://quilio.onrender.com/api` (or `https://quilio.onrender.com`)
+   - `VITE_SOCKET_URL=https://quilio.onrender.com` (optional; automatically derived from `VITE_API_URL`)
+   - `VITE_GOOGLE_CLIENT_ID=<your-google-oauth-client-id>`
 
-Example rewrite destination: `https://quilio-api.onrender.com/api/$1`
-
-Optional env on Vercel:
-
-- `VITE_API_URL=https://quilio-api.onrender.com` (if not using rewrites)
-- `VITE_SOCKET_URL=https://quilio-api.onrender.com`
-
-4. Ensure SPA fallback rewrite to `/index.html` remains.
+4. `client/vercel.json` contains standard SPA fallback rewrite to `/index.html`.
+   (Browser connects directly to the Render backend for both REST and Socket.io, bypassing Vercel edge proxy limitations).
 
 ## Post-deploy smoke checklist
 
