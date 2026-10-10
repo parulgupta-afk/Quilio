@@ -8,6 +8,7 @@ const {
 
 const { checkAIRateLimit } = require('../services/aiRateLimit');
 const { DEFAULT_MIN_SCORE } = require('../services/embeddingPipeline');
+const { buildGroundedSources, filterModelSources } = require('../services/citationGuard');
 
 // @desc    Chat with a specific post (RAG)
 // @route   POST /api/ai/chat/:postId
@@ -54,7 +55,13 @@ const chatWithBlog = async (req, res) => {
     }
 
     const result = await chatWithPost(question, relevantChunks, history);
-    res.status(200).json({ ...result, grounded: true, minScore: DEFAULT_MIN_SCORE });
+    const sources = filterModelSources(result.sources, relevantChunks);
+    res.status(200).json({
+      answer: result.answer,
+      sources,
+      grounded: true,
+      minScore: DEFAULT_MIN_SCORE,
+    });
   } catch (error) {
     console.error('Chat with blog error:', error.message);
     res.status(500).json({ message: 'Failed to generate answer. Please try again.' });

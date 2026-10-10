@@ -1,9 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * Shared AI rate limit backed by MongoDB (survives restarts; works across instances).
- * Falls back to in-memory if Mongo is unavailable (dev-only safety).
- */
 const usageSchema = new mongoose.Schema(
   {
     key: { type: String, required: true, unique: true },
@@ -13,24 +9,18 @@ const usageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const AIUsage =
-  mongoose.models.AIUsage || mongoose.model('AIUsage', usageSchema);
-
+const AIUsage = mongoose.models.AIUsage || mongoose.model('AIUsage', usageSchema);
 const memoryFallback = new Map();
 
-async function checkAIRateLimit(userId, limit = 40) {
+async function checkAIRateLimit(userId, limit = Number(process.env.AI_DAILY_LIMIT || 40)) {
   const key = `ai:${userId}`;
   const now = new Date();
   const dayMs = 24 * 60 * 60 * 1000;
-
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return memoryCheck(key, limit, dayMs);
-    }
-
+    if (mongoose.connection.readyState !== 1) return memoryCheck(key, limit, dayMs);
     let doc = await AIUsage.findOne({ key });
     if (!doc || doc.resetAt <= now) {
-      doc = await AIUsage.findOneAndUpdate(
+      await AIUsage.findOneAndUpdate(
         { key },
         { count: 1, resetAt: new Date(now.getTime() + dayMs) },
         { upsert: true, new: true }
@@ -42,7 +32,7 @@ async function checkAIRateLimit(userId, limit = 40) {
     await doc.save();
     return true;
   } catch (err) {
-    console.error('AI rate limit error, using memory fallback:', err.message);
+    console.error('AI rate limit error:', err.message);
     return memoryCheck(key, limit, dayMs);
   }
 }

@@ -1,28 +1,13 @@
 {
-  "version": "1.0.0",
-  "notes": "Synthetic ground-truth for retrieval metric unit tests. Real content eval requires seed posts + embeddings.",
+  "version": "1.1.0",
+  "notes": "Offline BOW proxy dataset for CI. Expand with real seed article chunks for production eval.",
   "examples": [
-    {
-      "id": "q1",
-      "question": "What is a binary search tree?",
-      "relevantChunkIndices": [0],
-      "answerable": true,
-      "category": "direct"
-    },
-    {
-      "id": "q2",
-      "question": "How does inorder traversal visit nodes?",
-      "relevantChunkIndices": [1, 2],
-      "answerable": true,
-      "category": "multi_chunk"
-    },
-    {
-      "id": "q3",
-      "question": "What is the capital of Mars?",
-      "relevantChunkIndices": [],
-      "answerable": false,
-      "category": "out_of_scope"
-    }
+    { "id": "q1", "question": "What is a binary search tree?", "relevantChunkIndices": [0], "answerable": true, "category": "direct" },
+    { "id": "q2", "question": "How does inorder traversal visit nodes?", "relevantChunkIndices": [1, 2], "answerable": true, "category": "multi_chunk" },
+    { "id": "q3", "question": "Does inorder traversal sort BST keys?", "relevantChunkIndices": [2], "answerable": true, "category": "synthesis" },
+    { "id": "q4", "question": "What is the capital of Mars?", "relevantChunkIndices": [], "answerable": false, "category": "out_of_scope" },
+    { "id": "q5", "question": "How do I cook pasta?", "relevantChunkIndices": [], "answerable": false, "category": "unrelated" },
+    { "id": "q6", "question": "What color is the left child rule?", "relevantChunkIndices": [0], "answerable": true, "category": "ambiguous_wording" }
   ],
   "corpusChunks": [
     { "chunkIndex": 0, "chunkText": "A binary search tree (BST) is a binary tree where left children are less than the node and right children are greater." },
