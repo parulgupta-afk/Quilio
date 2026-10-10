@@ -52,9 +52,16 @@ async function processPostEmbeddings(postId, content) {
           if (!Array.isArray(embedding) || embedding.length !== EMBEDDING_DIMS) {
             throw new Error(`dim mismatch ${embedding?.length} vs ${EMBEDDING_DIMS}`);
           }
-          return { post: postId, chunkText: chunk.chunkText, chunkIndex: chunk.chunkIndex,
+          return {
+            post: postId,
+            chunkText: chunk.chunkText,
+            chunkIndex: chunk.chunkIndex,
             startOffset: chunk.startOffset ?? null,
-            endOffset: chunk.endOffset ?? null, embedding, embeddingModel: EMBEDDING_MODEL };
+            endOffset: chunk.endOffset ?? null,
+            embedding,
+            embeddingModel: EMBEDDING_MODEL,
+            embeddingDims: EMBEDDING_DIMS,
+          };
         });
         await EmbeddingChunk.insertMany(docs);
         post.embeddingStatus = 'completed';
@@ -86,7 +93,9 @@ async function retrieveInApp(postId, queryEmbedding, topK, minScore, filterWeak)
   const chunks = await EmbeddingChunk.find({ post: postId }).lean();
   if (!chunks.length) return [];
   const { cosineSimilarity } = require('./aiService');
-  const scored = chunks.map((c) => ({ ...c, score: cosineSimilarity(queryEmbedding, c.embedding) }));
+  const scored = chunks
+    .filter((c) => Array.isArray(c.embedding) && c.embedding.length === queryEmbedding.length)
+    .map((c) => ({ ...c, score: cosineSimilarity(queryEmbedding, c.embedding) }));
   scored.sort((a, b) => b.score - a.score);
   const top = scored.slice(0, topK);
   return filterWeak ? top.filter((c) => c.score >= minScore) : top;

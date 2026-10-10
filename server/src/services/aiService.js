@@ -40,9 +40,9 @@ async function generateEmbedding(text) {
       throw new Error('Empty embedding returned');
     }
     if (expectedDims && values.length !== expectedDims) {
-      // gemini-embedding-001/2 can return flexible dims; truncate/pad is unsafe — surface mismatch
-      console.warn(
-        `Embedding dim ${values.length} != configured EMBEDDING_DIMS=${expectedDims} (model=${modelName})`
+      // Do not truncate/pad — incompatible vectors break retrieval. Hard-fail.
+      throw new Error(
+        `Embedding dimension mismatch: got ${values.length}, expected EMBEDDING_DIMS=${expectedDims} (model=${modelName})`
       );
     }
     return values;
@@ -52,7 +52,61 @@ async function generateEmbedding(text) {
   }
 }
 
-const { chunkText } = require('./chunkText');
+// ==================== CHUNKING ====================
+
+/**
+ * Split post content into semantic chunks
+ * Strategy: Split by paragraphs / headings, keep chunks ~300-600 characters
+ */
+function chunkText(text, maxChunkSize = 500) {
+  if (!text || text.trim().length === 0) return [];
+
+  // Clean the text
+  const cleaned = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  // Split by double newlines (paragraphs) first
+  const paragraphs = cleaned.split(/\n\n+/);
+  const chunks = [];
+  let currentChunk = '';
+
+  for (const para of paragraphs) {
+    const trimmed = para.trim();
+    if (!trimmed) continue;
+
+    if ((currentChunk + '\n\n' + trimmed).length <= maxChunkSize) {
+      currentChunk = currentChunk ? currentChunk + '\n\n' + trimmed : trimmed;
+    } else {
+      if (currentChunk) chunks.push(currentChunk);
+      // If a single paragraph is too long, split by sentences
+      if (trimmed.length > maxChunkSize) {
+        const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || [trimmed];
+        let sentenceChunk = '';
+        for (const sentence of sentences) {
+          if ((sentenceChunk + ' ' + sentence).length <= maxChunkSize) {
+            sentenceChunk = sentenceChunk ? sentenceChunk + ' ' + sentence : sentence;
+          } else {
+            if (sentenceChunk) chunks.push(sentenceChunk.trim());
+            sentenceChunk = sentence;
+          }
+        }
+        if (sentenceChunk) currentChunk = sentenceChunk.trim();
+        else currentChunk = '';
+      } else {
+        currentChunk = trimmed;
+      }
+    }
+  }
+
+  if (currentChunk) chunks.push(currentChunk);
+
+  return chunks.map((text, index) => ({
+    chunkText: text,
+    chunkIndex: index,
+  }));
+}
 
 // ==================== RAG CHAT ====================
 
