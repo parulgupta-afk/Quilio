@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Follow = require('../models/Follow');
 const Like = require('../models/Like');
 const Bookmark = require('../models/Bookmark');
@@ -13,6 +14,10 @@ const createNotification = require('../utils/createNotification');
 const followUser = async (req, res) => {
   try {
     const targetUserId = req.params.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
 
     if (targetUserId === req.user._id.toString()) {
       return res.status(400).json({ message: 'You cannot follow yourself' });
@@ -41,14 +46,18 @@ const followUser = async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, { $inc: { followingCount: 1 } });
     await User.findByIdAndUpdate(targetUserId, { $inc: { followersCount: 1 } });
 
-    const io = req.app.get('io');
-    await createNotification({
-      recipientId: targetUserId,
-      senderId: req.user._id,
-      type: 'follow',
-      message: `${req.user.name} started following you`,
-      io,
-    });
+    try {
+      const io = req.app.get('io') || global.io;
+      await createNotification({
+        recipientId: targetUserId,
+        senderId: req.user._id,
+        type: 'follow',
+        message: `${req.user.name || 'Someone'} started following you`,
+        io,
+      });
+    } catch (notifErr) {
+      console.warn('Follow notification delivery error:', notifErr.message);
+    }
 
     res.status(200).json({ message: 'Followed successfully', following: true });
   } catch (error) {
@@ -62,6 +71,10 @@ const followUser = async (req, res) => {
 const unfollowUser = async (req, res) => {
   try {
     const targetUserId = req.params.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
 
     const follow = await Follow.findOneAndDelete({
       follower: req.user._id,
@@ -90,6 +103,10 @@ const likePost = async (req, res) => {
   try {
     const postId = req.params.postId;
 
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
+
     const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
@@ -100,18 +117,31 @@ const likePost = async (req, res) => {
       return res.status(200).json({ message: 'Already liked', liked: true });
     }
 
-    await Like.create({ user: req.user._id, post: postId });
-    await Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } });
+    try {
+      await Like.create({ user: req.user._id, post: postId });
+      await Post.findByIdAndUpdate(postId, { $inc: { likesCount: 1 } });
+    } catch (dbErr) {
+      if (dbErr.code === 11000) {
+        return res.status(200).json({ message: 'Already liked', liked: true });
+      }
+      throw dbErr;
+    }
 
-    const io = req.app.get('io');
-    await createNotification({
-      recipientId: post.author,
-      senderId: req.user._id,
-      type: 'like',
-      postId,
-      message: `${req.user.name} liked your post`,
-      io,
-    });
+    try {
+      if (post.author && post.author.toString() !== req.user._id.toString()) {
+        const io = req.app.get('io') || global.io;
+        await createNotification({
+          recipientId: post.author,
+          senderId: req.user._id,
+          type: 'like',
+          postId,
+          message: `${req.user.name || 'Someone'} liked your post`,
+          io,
+        });
+      }
+    } catch (notifErr) {
+      console.warn('Like notification delivery error:', notifErr.message);
+    }
 
     res.status(200).json({ message: 'Post liked', liked: true });
   } catch (error) {
@@ -125,6 +155,10 @@ const likePost = async (req, res) => {
 const unlikePost = async (req, res) => {
   try {
     const postId = req.params.postId;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
 
     const like = await Like.findOneAndDelete({
       user: req.user._id,
@@ -228,15 +262,21 @@ const addComment = async (req, res) => {
       'name avatarUrl'
     );
 
-    const io = req.app.get('io');
-    await createNotification({
-      recipientId: post.author,
-      senderId: req.user._id,
-      type: 'comment',
-      postId,
-      message: `${req.user.name} commented on your post`,
-      io,
-    });
+    try {
+      if (post.author && post.author.toString() !== req.user._id.toString()) {
+        const io = req.app.get('io') || global.io;
+        await createNotification({
+          recipientId: post.author,
+          senderId: req.user._id,
+          type: 'comment',
+          postId,
+          message: `${req.user.name || 'Someone'} commented on your post`,
+          io,
+        });
+      }
+    } catch (notifErr) {
+      console.warn('Comment notification delivery error:', notifErr.message);
+    }
 
     res.status(201).json(populated);
   } catch (error) {

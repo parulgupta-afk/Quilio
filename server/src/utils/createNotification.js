@@ -1,23 +1,44 @@
 const Notification = require('../models/Notification');
 
-async function createNotification({ recipient, sender, type, post, message }) {
+async function createNotification({ recipient, recipientId, sender, senderId, type, post, postId, message, io }) {
   try {
-    if (!recipient || !type) return null;
+    const targetRecipient = recipient || recipientId;
+    const targetSender = sender || senderId;
+    const targetPost = post || postId;
+
+    if (!targetRecipient || !type) return null;
+
+    // Do not notify self
+    if (targetSender && targetRecipient.toString() === targetSender.toString()) {
+      return null;
+    }
+
     const doc = await Notification.create({
-      recipient,
-      sender: sender || undefined,
+      recipient: targetRecipient,
+      sender: targetSender || undefined,
       type,
-      post: post || undefined,
+      post: targetPost || undefined,
       message: message || '',
     });
+
     const populated = await Notification.findById(doc._id)
       .populate('sender', 'name avatarUrl')
       .populate('post', 'title slug');
-    if (global.io) global.io.to(`user:${recipient.toString()}`).emit('notification', populated);
+
+    const socketServer = io || global.io;
+    const recipientStr = targetRecipient.toString();
+    if (socketServer) {
+      socketServer.to(`user:${recipientStr}`).emit('notification', populated);
+    }
+    if (global.io && global.io !== socketServer) {
+      global.io.to(`user:${recipientStr}`).emit('notification', populated);
+    }
     return populated;
   } catch (err) {
     console.error('createNotification error:', err.message);
     return null;
   }
 }
-module.exports = { createNotification };
+
+module.exports = createNotification;
+module.exports.createNotification = createNotification;

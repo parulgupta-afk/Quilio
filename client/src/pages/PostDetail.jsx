@@ -20,6 +20,7 @@ export default function PostDetail() {
   const [bookmarked, setBookmarked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [forking, setForking] = useState(false);
+  const [liking, setLiking] = useState(false);
 
   useEffect(() => {
     if (!slug) { setError('Invalid post link'); setLoading(false); return; }
@@ -45,15 +46,19 @@ export default function PostDetail() {
 
   const handleLike = async () => {
     if (!isAuthenticated) return alert('Please login');
+    if (!post?._id || liking) return;
+    setLiking(true);
+    const prevLiked = liked;
+    const prevLikesCount = post.likesCount || 0;
     try {
-      if (liked) {
-        await api.delete(`/social/like/${post._id}`);
-        setPost(p => ({ ...p, likesCount: Math.max(0, (p.likesCount || 1) - 1) }));
+      if (prevLiked) {
         setLiked(false);
+        setPost(p => ({ ...p, likesCount: Math.max(0, (p.likesCount || 1) - 1) }));
+        await api.delete(`/social/like/${post._id}`);
       } else {
-        await api.post(`/social/like/${post._id}`);
-        setPost(p => ({ ...p, likesCount: (p.likesCount || 0) + 1 }));
         setLiked(true);
+        setPost(p => ({ ...p, likesCount: (p.likesCount || 0) + 1 }));
+        await api.post(`/social/like/${post._id}`);
       }
     } catch (e) {
       console.error(e);
@@ -61,7 +66,13 @@ export default function PostDetail() {
         setLiked(true);
       } else if (e.response?.data?.message === 'Post not liked') {
         setLiked(false);
+      } else {
+        setLiked(prevLiked);
+        setPost(p => ({ ...p, likesCount: prevLikesCount }));
+        alert(e.response?.data?.message || 'Could not update like');
       }
+    } finally {
+      setLiking(false);
     }
   };
 
@@ -210,11 +221,12 @@ export default function PostDetail() {
         }}>
           <button
             onClick={handleLike}
+            disabled={liking}
             style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12,
               background: liked ? 'rgba(221,183,255,0.12)' : '#1e1f25',
               border: `1px solid ${liked ? 'rgba(221,183,255,0.3)' : 'rgba(255,255,255,0.07)'}`,
-              color: liked ? '#ddb7ff' : '#908fa0', fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
+              color: liked ? '#ddb7ff' : '#908fa0', fontSize: 13, cursor: liking ? 'not-allowed' : 'pointer', transition: 'all 0.2s',
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 17, ...(liked ? { fontVariationSettings: "'FILL' 1" } : {}) }}>favorite</span>
