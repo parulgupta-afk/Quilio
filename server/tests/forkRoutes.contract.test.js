@@ -18,4 +18,19 @@ describe('fork API contract', () => {
     assert.match(ctrl, /const restoreRevision/);
     assert.match(ctrl, /Not authorized/);
   });
+
+  it('client PostDetail defines handleFork in component scope', () => {
+    const postDetail = fs.readFileSync(
+      path.join(__dirname, '../../client/src/pages/PostDetail.jsx'),
+      'utf8'
+    );
+    assert.match(postDetail, /const handleFork\s*=\s*async/);
+    assert.match(postDetail, /api\.post\(`\/posts\/\$\{post\._id\}\/fork`\)/);
+    assert.match(postDetail, /onClick=\{handleFork\}/);
+    // Ensure handleFork is NOT inside if (loading)
+    const loadingBlockMatch = postDetail.match(/if\s*\(loading\)\s*\{([^}]*)\}/);
+    assert.ok(loadingBlockMatch);
+    assert.doesNotMatch(loadingBlockMatch[1], /handleFork/);
+  });
 });
+

@@ -19,6 +19,7 @@ export default function PostDetail() {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [forking, setForking] = useState(false);
 
   useEffect(() => {
     if (!slug) { setError('Invalid post link'); setLoading(false); return; }
@@ -99,18 +100,23 @@ export default function PostDetail() {
     } finally { setSubmitting(false); }
   };
 
-  if (loading) {
-  
   const handleFork = async () => {
-    if (!post?._id) return;
+    if (!isAuthenticated) return alert('Please login to fork this article');
+    if (!post?._id || forking) return;
+    setForking(true);
     try {
       await api.post(`/posts/${post._id}/fork`);
       navigate('/dashboard');
     } catch (e) {
+      console.error(e);
       alert(e.response?.data?.message || 'Could not fork post');
+    } finally {
+      setForking(false);
     }
   };
-  return (
+
+  if (loading) {
+    return (
       <Layout>
         <div className="ns-loading">
           <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#c0c1ff', marginRight: 8, animation: 'spin 1.2s linear infinite' }}>progress_activity</span>
@@ -257,10 +263,23 @@ export default function PostDetail() {
         {/* Article body */}
         {isAuthenticated && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-            <button type="button" onClick={handleFork} style={{
-              padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(99,102,241,0.15)', color: '#c7d2fe', cursor: 'pointer', fontSize: 13
-            }}>Fork as notes</button>
+            <button
+              type="button"
+              disabled={forking}
+              onClick={handleFork}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 8,
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(99,102,241,0.15)',
+                color: '#c7d2fe',
+                cursor: forking ? 'not-allowed' : 'pointer',
+                fontSize: 13,
+                opacity: forking ? 0.7 : 1,
+              }}
+            >
+              {forking ? 'Forking…' : 'Fork as notes'}
+            </button>
             {post?.forkedFrom && (
               <span style={{ fontSize: 12, color: '#908fa0', alignSelf: 'center' }}>Forked from another article</span>
             )}
