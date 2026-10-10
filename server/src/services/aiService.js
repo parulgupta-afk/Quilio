@@ -25,25 +25,32 @@ async function generateEmbedding(text) {
   const expectedDims = getEmbeddingDims();
   try {
     const model = getGenAI().getGenerativeModel({ model: modelName });
-    // Prefer task-typed embed when supported (gemini-embedding-001)
+    // Prefer task-typed embed when supported (gemini-embedding-001) with outputDimensionality
     let result;
+    const embedReq = {
+      content: { role: 'user', parts: [{ text: String(text || '').slice(0, 8000) }] },
+      taskType: 'RETRIEVAL_DOCUMENT',
+    };
+    if (expectedDims) {
+      embedReq.outputDimensionality = expectedDims;
+    }
     try {
-      result = await model.embedContent({
-        content: { role: 'user', parts: [{ text: String(text || '').slice(0, 8000) }] },
-        taskType: 'RETRIEVAL_DOCUMENT',
-      });
+      result = await model.embedContent(embedReq);
     } catch {
       result = await model.embedContent(String(text || '').slice(0, 8000));
     }
-    const values = result?.embedding?.values;
+    let values = result?.embedding?.values;
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error('Empty embedding returned');
     }
     if (expectedDims && values.length !== expectedDims) {
-      // Do not truncate/pad — incompatible vectors break retrieval. Hard-fail.
-      throw new Error(
-        `Embedding dimension mismatch: got ${values.length}, expected EMBEDDING_DIMS=${expectedDims} (model=${modelName})`
-      );
+      if (values.length > expectedDims && (modelName.includes('embedding') || modelName.includes('gemini'))) {
+        values = values.slice(0, expectedDims);
+      } else {
+        throw new Error(
+          `Embedding dimension mismatch: got ${values.length}, expected EMBEDDING_DIMS=${expectedDims} (model=${modelName})`
+        );
+      }
     }
     return values;
   } catch (error) {
