@@ -1,3 +1,6 @@
+/**
+ * Social controller handling follows, likes, bookmarks, and comments.
+ */
 const mongoose = require('mongoose');
 const Follow = require('../models/Follow');
 const Like = require('../models/Like');
