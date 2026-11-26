@@ -1,3 +1,6 @@
+/**
+ * Comment model supporting nested replies on posts.
+ */
 const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema(
