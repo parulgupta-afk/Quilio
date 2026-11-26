@@ -1,3 +1,6 @@
+/**
+ * Bookmark model linking users to their saved posts.
+ */
 const mongoose = require('mongoose');
 
 const bookmarkSchema = new mongoose.Schema(
