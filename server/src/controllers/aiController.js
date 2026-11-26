@@ -1,3 +1,6 @@
+/**
+ * AI controller handling RAG post chat, embedding generation, and write assistance.
+ */
 const Post = require('../models/Post');
 const EmbeddingChunk = require('../models/EmbeddingChunk');
 const { generateEmbedding, chatWithPost, writeWithAI } = require('../services/aiService');
