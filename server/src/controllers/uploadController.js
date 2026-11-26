@@ -1,3 +1,6 @@
+/**
+ * Upload controller handling image uploads to Cloudinary.
+ */
 const cloudinary = require('../config/cloudinary');
 
 // @desc    Upload image to Cloudinary
