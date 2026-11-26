@@ -1,3 +1,6 @@
+/**
+ * Authentication middleware for required and optional JWT verification.
+ */
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
