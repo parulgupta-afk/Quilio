@@ -1,3 +1,6 @@
+/**
+ * Notification model for follow, like, comment, reply, and quiz events.
+ */
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema(
