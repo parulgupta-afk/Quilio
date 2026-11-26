@@ -1,6 +1,6 @@
 /**
  * Lightweight request validators (no Zod dependency).
- * Usage: router.post('/x', validate({ body: { title: 'string', content: 'string' } }), handler)
+ * Usage: router.post('/x', validateBody({ title: 'string', content: 'string' }), handler)
  */
 
 function isNonEmptyString(v) {
