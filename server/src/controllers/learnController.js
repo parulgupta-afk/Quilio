@@ -1,3 +1,6 @@
+/**
+ * Learn controller handling study guides, quiz generation, submissions, and progress.
+ */
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const Post = require('../models/Post');
