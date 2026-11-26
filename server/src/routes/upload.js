@@ -1,3 +1,6 @@
+/**
+ * Upload routes for handling image uploads to Cloudinary.
+ */
 const express = require('express');
 const router = express.Router();
 const { uploadImage } = require('../controllers/uploadController');
