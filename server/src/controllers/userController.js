@@ -1,3 +1,6 @@
+/**
+ * User controller handling public profile retrieval and profile updates.
+ */
 const User = require('../models/User');
 const Follow = require('../models/Follow');
 
