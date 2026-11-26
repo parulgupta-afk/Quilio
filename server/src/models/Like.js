@@ -1,3 +1,6 @@
+/**
+ * Like model tracking unique user likes per post.
+ */
 const mongoose = require('mongoose');
 
 const likeSchema = new mongoose.Schema(
