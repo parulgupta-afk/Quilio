@@ -1,3 +1,6 @@
+/**
+ * Post routes for CRUD, forking, revision history, and restoration.
+ */
 const express = require('express');
 const router = express.Router();
 const {
