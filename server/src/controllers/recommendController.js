@@ -1,3 +1,6 @@
+/**
+ * Recommendation controller handling similar post lookup and personalized feeds.
+ */
 const Post = require('../models/Post');
 const EmbeddingChunk = require('../models/EmbeddingChunk');
 const Follow = require('../models/Follow');
