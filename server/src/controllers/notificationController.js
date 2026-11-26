@@ -1,3 +1,6 @@
+/**
+ * Notification controller handling retrieval and read-state updates.
+ */
 const Notification = require('../models/Notification');
 
 // @desc    Get my notifications
