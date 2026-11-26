@@ -1,3 +1,6 @@
+/**
+ * Learning routes for AI-generated study guides, quizzes, and user progress.
+ */
 const express = require('express');
 const router = express.Router();
 const {
