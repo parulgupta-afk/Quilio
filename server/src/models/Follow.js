@@ -1,3 +1,6 @@
+/**
+ * Follow model tracking follower-to-following user relationships.
+ */
 const mongoose = require('mongoose');
 
 const followSchema = new mongoose.Schema(
