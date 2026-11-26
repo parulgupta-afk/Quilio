@@ -1,3 +1,6 @@
+/**
+ * PostRevision model storing versioned snapshots of post edits.
+ */
 const mongoose = require('mongoose');
 
 const postRevisionSchema = new mongoose.Schema(
