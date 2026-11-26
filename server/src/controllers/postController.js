@@ -1,3 +1,6 @@
+/**
+ * Post controller handling CRUD, forking, revisions, and version restoration.
+ */
 const Post = require('../models/Post');
 const PostRevision = require('../models/PostRevision');
 const Like = require('../models/Like');
