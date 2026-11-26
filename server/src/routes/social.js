@@ -1,3 +1,6 @@
+/**
+ * Social interaction routes for follows, likes, bookmarks, and comments.
+ */
 const express = require('express');
 const router = express.Router();
 const {
