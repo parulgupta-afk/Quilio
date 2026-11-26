@@ -1,3 +1,6 @@
+/**
+ * Search controller handling keyword queries across posts and users.
+ */
 const Post = require('../models/Post');
 const User = require('../models/User');
 
