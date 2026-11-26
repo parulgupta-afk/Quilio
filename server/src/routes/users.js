@@ -1,3 +1,6 @@
+/**
+ * User profile routes for viewing and updating user details.
+ */
 const express = require('express');
 const router = express.Router();
 const { getUserProfile, updateProfile } = require('../controllers/userController');
