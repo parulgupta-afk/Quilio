@@ -1,3 +1,6 @@
+/**
+ * Multer middleware for in-memory image upload validation (5MB limit).
+ */
 const multer = require('multer');
 const path = require('path');
 
