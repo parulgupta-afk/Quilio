@@ -1,3 +1,6 @@
+/**
+ * Auth controller handling registration, login, OAuth, demo login, and JWT issuance.
+ */
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
