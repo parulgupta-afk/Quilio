@@ -1,3 +1,6 @@
+/**
+ * Authentication routes for registration, login, OAuth, and session lookup.
+ */
 const express = require('express');
 const router = express.Router();
 const { register, login, googleLogin, getMe, demoLogin } = require('../controllers/authController');
