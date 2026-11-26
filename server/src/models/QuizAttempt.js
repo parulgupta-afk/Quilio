@@ -1,3 +1,6 @@
+/**
+ * QuizAttempt model recording user answers and scores for a post quiz.
+ */
 const mongoose = require('mongoose');
 
 const quizAttemptSchema = new mongoose.Schema(
