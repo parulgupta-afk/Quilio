@@ -1,3 +1,6 @@
+/**
+ * Create a persisted notification and emit it over Socket.IO to the recipient room.
+ */
 const Notification = require('../models/Notification');
 
 async function createNotification({ recipient, recipientId, sender, senderId, type, post, postId, message, io }) {
