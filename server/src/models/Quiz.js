@@ -1,3 +1,6 @@
+/**
+ * Quiz model storing AI-generated study guides, flashcards, and questions per post.
+ */
 const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
