@@ -1,3 +1,6 @@
+/**
+ * AI routes for RAG chat, post embedding generation, and writing assistance.
+ */
 const { aiTiming } = require('../middleware/requestTiming');
 const express = require('express');
 const router = express.Router();
