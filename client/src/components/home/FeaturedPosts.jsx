@@ -1,3 +1,6 @@
+/**
+ * Home section rendering curated featured knowledge posts.
+ */
 import KnowledgePostCard from './KnowledgePostCard';
 
 export default function FeaturedPosts({ posts }) {
