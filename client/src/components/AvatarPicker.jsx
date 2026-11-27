@@ -1,3 +1,6 @@
+/**
+ * Avatar selection modal supporting preset SVG avatars and custom uploads.
+ */
 import { useEffect, useRef, useState } from 'react';
 import api from '../services/api';
 import { AVATAR_OPTIONS } from '../constants/avatars';
