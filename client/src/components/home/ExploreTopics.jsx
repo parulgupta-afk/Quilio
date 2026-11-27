@@ -1,3 +1,6 @@
+/**
+ * Home section listing popular topic tags for quick discovery.
+ */
 import { Link } from 'react-router-dom';
 
 const FALLBACK = [
