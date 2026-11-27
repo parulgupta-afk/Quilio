@@ -1,3 +1,6 @@
+/**
+ * Zustand store for persisted authentication state and user session actions.
+ */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../services/api';
