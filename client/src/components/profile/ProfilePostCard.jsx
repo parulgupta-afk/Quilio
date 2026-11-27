@@ -1,3 +1,6 @@
+/**
+ * Compact post card rendered on user profile pages.
+ */
 import { Link } from 'react-router-dom';
 
 function excerptOf(post, max = 110) {
