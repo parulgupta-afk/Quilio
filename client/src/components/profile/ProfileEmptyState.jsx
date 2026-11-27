@@ -1,3 +1,6 @@
+/**
+ * Empty state shown on a user profile when no posts are published yet.
+ */
 import { Link } from 'react-router-dom';
 
 export default function ProfileEmptyState({ isSelf }) {
