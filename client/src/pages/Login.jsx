@@ -1,3 +1,6 @@
+/**
+ * Login page supporting email/password and demo user sign-in.
+ */
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
