@@ -1,3 +1,6 @@
+/**
+ * Axios API client with base URL resolution and auth token interceptors.
+ */
 import axios from 'axios';
 
 export function getApiBaseUrl() {
