@@ -1,3 +1,6 @@
+/**
+ * Home section highlighting trending posts by engagement.
+ */
 import { Link } from 'react-router-dom';
 import UserAvatar from '../UserAvatar';
 import { postHref, readingMinutes } from './utils';
