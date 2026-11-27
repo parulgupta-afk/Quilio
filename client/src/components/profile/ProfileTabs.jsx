@@ -1,3 +1,6 @@
+/**
+ * Tab switcher for profile posts and about sections.
+ */
 const TABS = [
   { id: 'posts', label: 'Posts' },
   { id: 'about', label: 'About' },
