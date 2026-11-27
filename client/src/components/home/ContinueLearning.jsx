@@ -1,3 +1,6 @@
+/**
+ * Home section surfacing the user's recent quiz attempts to resume learning.
+ */
 import { Link } from 'react-router-dom';
 
 export default function ContinueLearning({ attempts }) {
