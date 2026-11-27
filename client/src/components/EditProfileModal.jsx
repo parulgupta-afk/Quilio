@@ -1,3 +1,6 @@
+/**
+ * Modal dialog for editing the current user's profile details and avatar.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserAvatar from './UserAvatar';
