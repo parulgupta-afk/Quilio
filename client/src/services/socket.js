@@ -1,3 +1,6 @@
+/**
+ * Socket.IO client singleton for real-time notifications.
+ */
 import { io } from 'socket.io-client';
 
 let socket = null;
