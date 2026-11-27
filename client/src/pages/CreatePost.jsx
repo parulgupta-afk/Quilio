@@ -1,3 +1,6 @@
+/**
+ * Post editor page with markdown preview, cover upload, and AI writing assist.
+ */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
