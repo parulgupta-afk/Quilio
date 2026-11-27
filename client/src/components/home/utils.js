@@ -1,3 +1,6 @@
+/**
+ * Helper utilities for post URLs and reading-time estimates.
+ */
 export function postHref(post) {
   return post?.slug ? `/post/${post.slug}` : `/post/${post?._id}`;
 }
