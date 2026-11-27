@@ -1,3 +1,6 @@
+/**
+ * Animated feature showcase carousel displayed on the auth screen.
+ */
 import { useEffect, useState, useCallback } from 'react';
 
 const SLIDES = [
