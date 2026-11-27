@@ -1,3 +1,6 @@
+/**
+ * Home section highlighting Quilio's AI study and RAG capabilities.
+ */
 import { Link } from 'react-router-dom';
 
 const FEATURES = [
