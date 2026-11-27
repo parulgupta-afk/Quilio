@@ -1,3 +1,6 @@
+/**
+ * Main authenticated home feed displaying curated and recent posts.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
