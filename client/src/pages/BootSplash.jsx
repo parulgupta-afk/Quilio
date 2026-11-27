@@ -1,3 +1,6 @@
+/**
+ * Animated boot splash screen displayed on initial app launch.
+ */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
