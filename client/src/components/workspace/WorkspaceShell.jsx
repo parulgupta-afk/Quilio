@@ -1,3 +1,6 @@
+/**
+ * Authenticated workspace shell with sidebar navigation and user controls.
+ */
 import UserAvatar from '../UserAvatar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
