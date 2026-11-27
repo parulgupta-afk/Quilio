@@ -1,3 +1,6 @@
+/**
+ * Loading skeleton placeholder for the user profile page.
+ */
 export default function ProfileSkeleton() {
   return (
     <div className="profile-skeleton">
