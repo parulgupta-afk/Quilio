@@ -1,3 +1,6 @@
+/**
+ * Card component displaying a post summary, author info, and engagement counts.
+ */
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
