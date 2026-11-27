@@ -1,3 +1,6 @@
+/**
+ * Dropdown menu on the profile avatar for quick avatar changes and uploads.
+ */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { AVATAR_OPTIONS } from '../../constants/avatars';
 import UserAvatar from '../UserAvatar';
