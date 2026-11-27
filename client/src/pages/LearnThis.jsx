@@ -1,3 +1,6 @@
+/**
+ * Interactive learning page with AI-generated summary, flashcards, and quiz.
+ */
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
