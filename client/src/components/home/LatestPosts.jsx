@@ -1,3 +1,6 @@
+/**
+ * Home section rendering the latest published posts.
+ */
 import KnowledgePostCard from './KnowledgePostCard';
 
 export default function LatestPosts({ posts, loading }) {
