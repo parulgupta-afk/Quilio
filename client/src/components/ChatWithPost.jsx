@@ -1,3 +1,6 @@
+/**
+ * Interactive RAG chat drawer for asking questions about a post.
+ */
 import { useState, useRef, useEffect } from 'react';
 import api from '../services/api';
 import useAuthStore from '../store/authStore';
