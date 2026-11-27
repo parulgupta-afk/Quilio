@@ -1,3 +1,6 @@
+/**
+ * Landing hero banner with primary call-to-action links.
+ */
 import { Link } from 'react-router-dom';
 
 export default function HeroSection() {
