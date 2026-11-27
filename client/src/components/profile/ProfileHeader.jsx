@@ -1,3 +1,6 @@
+/**
+ * Profile header displaying user bio, stats, follow button, and avatar controls.
+ */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from '../UserAvatar';
