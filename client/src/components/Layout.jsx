@@ -1,3 +1,6 @@
+/**
+ * Top-level page layout with navigation bar, socket lifecycle, and footer.
+ */
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../services/socket';
