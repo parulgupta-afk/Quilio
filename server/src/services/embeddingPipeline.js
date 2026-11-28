@@ -1,3 +1,6 @@
+/**
+ * Embedding pipeline for indexing post chunks and retrieving relevant RAG context.
+ */
 const mongoose = require('mongoose');
 const EmbeddingChunk = require('../models/EmbeddingChunk');
 const Post = require('../models/Post');
