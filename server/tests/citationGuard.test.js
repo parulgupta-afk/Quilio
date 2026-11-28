@@ -1,3 +1,6 @@
+/**
+ * Unit tests for RAG citation parsing and grounded source filtering.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const {
