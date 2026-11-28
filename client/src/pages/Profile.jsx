@@ -1,3 +1,6 @@
+/**
+ * User profile page displaying author info, posts, followers, and edit controls.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
