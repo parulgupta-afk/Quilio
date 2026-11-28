@@ -1,3 +1,6 @@
+/**
+ * Unit tests for quiz submission scoring and attempt persistence.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { submitQuiz } = require('../src/controllers/learnController');
