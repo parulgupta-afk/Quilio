@@ -1,3 +1,6 @@
+/**
+ * Unit tests verifying startOffset and endOffset tracking in chunkText.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { chunkText } = require('../src/services/chunkText');
