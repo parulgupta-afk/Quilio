@@ -1,3 +1,6 @@
+/**
+ * EmbeddingChunk model storing post text chunks and their vector embeddings.
+ */
 const mongoose = require('mongoose');
 
 const embeddingChunkSchema = new mongoose.Schema(
