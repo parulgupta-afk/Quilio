@@ -1,3 +1,6 @@
+/**
+ * HTTP tests verifying demo-login is blocked in production mode.
+ */
 const { describe, it, after } = require('node:test');
 const assert = require('node:assert/strict');
 
