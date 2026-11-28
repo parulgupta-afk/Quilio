@@ -1,3 +1,6 @@
+/**
+ * Unit tests verifying structured logger redacts sensitive fields.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const logger = require('../src/utils/logger');
