@@ -1,3 +1,6 @@
+/**
+ * Unit tests for post fork lineage rootPost resolution.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
