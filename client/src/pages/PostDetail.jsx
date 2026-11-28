@@ -1,3 +1,6 @@
+/**
+ * Article reader page with comments, likes, bookmarks, forks, and RAG chat.
+ */
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
