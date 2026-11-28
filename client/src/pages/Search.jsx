@@ -1,3 +1,6 @@
+/**
+ * Search results page for querying posts and authors by keyword.
+ */
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
