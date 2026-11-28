@@ -1,3 +1,6 @@
+/**
+ * Unit tests for validateBody request validation middleware.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { validateBody } = require('../src/middleware/validate');
