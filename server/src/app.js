@@ -1,3 +1,6 @@
+/**
+ * Express application setup with security middleware, CORS, and API route mounting.
+ */
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
