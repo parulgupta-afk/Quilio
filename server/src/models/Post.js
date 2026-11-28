@@ -1,3 +1,6 @@
+/**
+ * Post model storing articles, metadata, fork lineage, and engagement counters.
+ */
 const mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema(
