@@ -1,3 +1,6 @@
+/**
+ * Unit tests for atomic AI rate limit memory fallback enforcement.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
