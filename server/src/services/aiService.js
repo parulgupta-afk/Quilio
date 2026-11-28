@@ -1,3 +1,6 @@
+/**
+ * Gemini AI service for embeddings, RAG chat, quiz generation, and writing assist.
+ */
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const {
   getChatModelName,
