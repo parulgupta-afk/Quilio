@@ -1,3 +1,6 @@
+/**
+ * User model storing account credentials, profile metadata, and password helpers.
+ */
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
