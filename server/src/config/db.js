@@ -1,3 +1,6 @@
+/**
+ * MongoDB connection helper using Mongoose.
+ */
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
