@@ -1,3 +1,6 @@
+/**
+ * HTTP validation contract tests for auth register and login routes.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
