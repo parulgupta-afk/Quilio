@@ -1,3 +1,6 @@
+/**
+ * Unit tests for Gemini model configuration env overrides and defaults.
+ */
 const { describe, it, after } = require('node:test');
 const assert = require('node:assert/strict');
 
