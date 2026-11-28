@@ -1,3 +1,6 @@
+/**
+ * Unit tests for optionalAuth middleware token handling.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const jwt = require('jsonwebtoken');
