@@ -1,3 +1,6 @@
+/**
+ * Per-user daily AI rate limiter backed by MongoDB with an in-memory fallback.
+ */
 const mongoose = require('mongoose');
 
 const usageSchema = new mongoose.Schema(
