@@ -1,3 +1,6 @@
+/**
+ * HTTP and Socket.IO server entry point with MongoDB connection bootstrap.
+ */
 require('dotenv').config();
 const http = require('http');
 const jwt = require('jsonwebtoken');
