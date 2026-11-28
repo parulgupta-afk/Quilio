@@ -1,3 +1,6 @@
+/**
+ * Root application router with lazy-loaded pages and chunk error recovery.
+ */
 import { Component, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
