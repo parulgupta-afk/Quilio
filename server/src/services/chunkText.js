@@ -1,3 +1,6 @@
+/**
+ * Paragraph-aware text chunker producing offset-tracked segments for embeddings.
+ */
 function chunkText(text, maxChunkSize = 500) {
   if (!text || text.trim().length === 0) return [];
   const cleaned = String(text).replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
