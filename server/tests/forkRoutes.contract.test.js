@@ -1,3 +1,6 @@
+/**
+ * Contract tests verifying fork and revision routes are registered on posts router.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
