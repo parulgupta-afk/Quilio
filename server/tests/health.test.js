@@ -1,3 +1,6 @@
+/**
+ * HTTP tests for the /api/health endpoint.
+ */
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
