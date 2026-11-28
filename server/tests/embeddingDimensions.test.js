@@ -1,3 +1,6 @@
+/**
+ * Unit tests for embedding dimension validation and reindex idempotency.
+ */
 const { describe, it, after } = require('node:test');
 const assert = require('node:assert/strict');
 
