@@ -1,3 +1,6 @@
+/**
+ * Learning progress page summarizing completed quizzes and scores.
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
