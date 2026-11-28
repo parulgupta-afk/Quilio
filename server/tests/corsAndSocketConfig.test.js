@@ -1,3 +1,6 @@
+/**
+ * Unit tests for CORS origin allowlisting and Socket.IO configuration.
+ */
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
